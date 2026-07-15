@@ -101,7 +101,7 @@ h1 {
 
 .upload-box {
   display: grid;
-  min-height: 230px;
+  min-height: 190px;
   place-items: center;
   padding: 28px;
   border: 2px dashed #a5b4fc;
@@ -149,8 +149,67 @@ h1 {
 }
 
 .status:empty,
+.batch-status:empty,
 .table-card:empty {
   display: none;
+}
+
+.batch-status {
+  margin-top: 22px;
+}
+
+.batch-status--error {
+  padding: 13px 16px;
+  border-radius: 12px;
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.batch-card {
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgba(30, 41, 59, 0.06);
+}
+
+.batch-summary {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 20px;
+}
+
+.batch-summary-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.batch-summary-copy strong {
+  font-size: 17px;
+}
+
+.batch-summary-copy span,
+.batch-completion span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.batch-completion {
+  display: flex;
+  min-width: 110px;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.batch-completion strong {
+  color: #4f46e5;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 20px;
 }
 
 .status {
@@ -243,6 +302,147 @@ h1 {
 
 .daily-table-card {
   margin-top: 24px;
+}
+
+.daily-view-controls {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.view-mode-group,
+.view-mode-radio,
+.daily-view-selectors {
+  display: flex;
+  align-items: center;
+}
+
+.view-mode-group {
+  gap: 20px;
+}
+
+.view-mode-label {
+  color: #475569;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.view-mode-radio {
+  gap: 20px;
+}
+
+.view-mode-radio label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.view-mode-radio input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #4f46e5;
+}
+
+.view-mode-radio input:checked + span {
+  color: #312e81;
+  font-weight: 700;
+}
+
+.daily-view-selectors {
+  gap: 12px;
+}
+
+.daily-view-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.daily-selection-field {
+  width: 280px;
+}
+
+.daily-metric-field {
+  width: 260px;
+}
+
+.daily-view-field .Select-control {
+  height: 38px;
+  border-color: #cbd5e1;
+  border-radius: 8px;
+}
+
+.daily-view-field .Select-placeholder,
+.daily-view-field .Select-value {
+  line-height: 36px !important;
+}
+
+.daily-view-field .Select-value-label {
+  color: #172033 !important;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.daily-visualization-card {
+  overflow: hidden;
+  min-height: 410px;
+  margin-top: 14px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(30, 41, 59, 0.06);
+}
+
+.daily-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.daily-chart-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.daily-chart-heading strong {
+  font-size: 18px;
+}
+
+.daily-chart-heading span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.daily-chart-total {
+  color: #4f46e5;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 14px;
+}
+
+.daily-chart {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 440px;
 }
 
 .empty-state {
@@ -347,6 +547,10 @@ h1 {
     text-align: center;
   }
 
+  .batch-summary {
+    align-items: flex-start;
+  }
+
   .site-nav {
     min-height: 58px;
     padding: 0 12px;
@@ -362,9 +566,22 @@ h1 {
   }
 
   .date-picker-panel,
-  .chart-header {
+  .chart-header,
+  .daily-view-controls,
+  .daily-chart-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .daily-view-selectors {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .daily-selection-field,
+  .daily-metric-field {
+    width: 100%;
   }
 
   .date-picker-control .DateInput,

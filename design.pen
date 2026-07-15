@@ -63,7 +63,7 @@
           "width": 1400,
           "fill": "#FFFFFF00",
           "layout": "vertical",
-          "gap": 30,
+          "gap": 22,
           "children": [
             {
               "type": "frame",
@@ -82,16 +82,16 @@
                   "content": "投資組合資料庫",
                   "lineHeight": 1.05,
                   "fontFamily": "$font-ui",
-                  "fontSize": 52,
+                  "fontSize": 44,
                   "fontWeight": "700",
-                  "letterSpacing": -2.08
+                  "letterSpacing": -1.7
                 },
                 {
                   "type": "text",
                   "id": "vlZsS",
                   "name": "Page subtitle",
                   "fill": "$text-secondary",
-                  "content": "上傳excel以存入資料庫",
+                  "content": "請將保管銀行的越權報表上傳，支援世華銀行與中信銀行格式",
                   "lineHeight": 1.6,
                   "fontFamily": "$font-ui",
                   "fontSize": 17,
@@ -101,89 +101,18 @@
             },
             {
               "type": "frame",
-              "id": "GqZK1",
-              "name": "Successful upload status",
-              "width": "fill_container",
-              "height": 52,
-              "fill": "#DCFCE7",
-              "cornerRadius": 12,
-              "padding": [
-                13,
-                16
-              ],
-              "justifyContent": "space_between",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "aP93G",
-                  "name": "Uploaded file identity",
-                  "fill": "#FFFFFF00",
-                  "gap": 10,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "ifG1L",
-                      "name": "Success indicator",
-                      "width": 26,
-                      "height": 26,
-                      "fill": "#16A34A",
-                      "cornerRadius": 13,
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "dvAfi",
-                          "name": "Success check",
-                          "width": 16,
-                          "height": 16,
-                          "icon": "check",
-                          "library": "lucide",
-                          "weight": 700,
-                          "fill": "#FFFFFF"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "yCyap",
-                      "name": "Uploaded filename",
-                      "fill": "#166534",
-                      "content": "DC084_20260709.xlsx",
-                      "fontFamily": "$font-ui",
-                      "fontSize": 14,
-                      "fontWeight": "700"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "OVsqv",
-                  "name": "Upload record summary",
-                  "fill": "#166534",
-                  "content": "24 rows · 11 columns · 24 records in SQLite",
-                  "fontFamily": "$font-data",
-                  "fontSize": 12,
-                  "fontWeight": "500"
-                }
-              ]
-            },
-            {
-              "type": "frame",
               "id": "jNbtK",
               "name": "Excel upload dropzone",
               "width": "fill_container",
-              "height": 230,
+              "height": 190,
               "fill": "#FFFFFFD1",
               "cornerRadius": 18,
               "stroke": "$border-accent",
               "strokeWidth": 2,
               "strokeAlignment": "inner",
               "layout": "vertical",
-              "gap": 7,
-              "padding": 28,
+              "gap": 8,
+              "padding": 24,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -216,9 +145,9 @@
                   "id": "biEQ1",
                   "name": "Dropzone title",
                   "fill": "$text-primary",
-                  "content": "Drop Excel files here",
+                  "content": "將多個 Excel 檔案拖曳到這裡",
                   "fontFamily": "$font-ui",
-                  "fontSize": 16,
+                  "fontSize": 18,
                   "fontWeight": "700"
                 },
                 {
@@ -226,7 +155,7 @@
                   "id": "RUcRz",
                   "name": "Dropzone hint",
                   "fill": "$text-secondary",
-                  "content": "or click to choose files",
+                  "content": "或點擊選擇檔案（可一次選取多個）",
                   "fontFamily": "$font-ui",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -236,10 +165,1021 @@
                   "id": "D7CaK",
                   "name": "Accepted file formats",
                   "fill": "$text-secondary",
-                  "content": "Accepted formats: .xlsx, .xls",
+                  "content": "支援 .xlsx、.xls ",
                   "fontFamily": "$font-ui",
                   "fontSize": 12,
                   "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "prYhy",
+              "name": "Batch upload status panel",
+              "clip": true,
+              "width": "fill_container",
+              "height": 474,
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pS4RY",
+                  "name": "Batch summary header",
+                  "width": "fill_container",
+                  "height": 88,
+                  "fill": "$surface",
+                  "padding": [
+                    18,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "A3qO0",
+                      "name": "Batch summary copy",
+                      "width": 520,
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UK7gn",
+                          "name": "Batch status title",
+                          "fill": "$text-primary",
+                          "content": "正在上傳 50 個 Excel 檔案",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 17,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "l6rDQe",
+                          "name": "Batch status subtitle",
+                          "fill": "$text-secondary",
+                          "content": "可離開此頁面，處理會在背景繼續",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PI5e8",
+                      "name": "Overall upload progress",
+                      "width": 420,
+                      "layout": "vertical",
+                      "gap": 7,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "vXblF",
+                          "name": "Overall progress labels",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zugt5",
+                              "name": "Overall progress count",
+                              "fill": "$text-primary",
+                              "content": "32 / 50 已處理",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "U3lx1",
+                              "name": "Overall progress percent",
+                              "fill": "$accent",
+                              "content": "64%",
+                              "fontFamily": "$font-data",
+                              "fontSize": 13,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "A56heo",
+                          "name": "Overall progress track",
+                          "width": "fill_container",
+                          "height": 8,
+                          "fill": "#E2E8F0",
+                          "cornerRadius": 4,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 4,
+                              "id": "xtagq",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Overall progress fill",
+                              "fill": "$accent",
+                              "width": 269,
+                              "height": 8
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "c6h23",
+                  "name": "Status filter toolbar",
+                  "width": "fill_container",
+                  "height": 54,
+                  "fill": "#F8FAFC",
+                  "stroke": "$border",
+                  "strokeWidth": {
+                    "top": 1,
+                    "bottom": 1
+                  },
+                  "strokeAlignment": "inner",
+                  "padding": [
+                    10,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "AGi6C",
+                      "name": "Status filter chips",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "W4xcUv",
+                          "name": "Filter 全部 50",
+                          "fill": "#EEF2FF",
+                          "cornerRadius": 16,
+                          "padding": [
+                            7,
+                            11
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "vpqz9",
+                              "name": "全部 50",
+                              "fill": "$accent",
+                              "content": "全部 50",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "k81jw",
+                          "name": "Filter 處理中 18",
+                          "fill": "#FEF3C7",
+                          "cornerRadius": 16,
+                          "padding": [
+                            7,
+                            11
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "b7inL4",
+                              "name": "處理中 18",
+                              "fill": "#92400E",
+                              "content": "處理中 18",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "urBtf",
+                          "name": "Filter 完成 29",
+                          "fill": "#DCFCE7",
+                          "cornerRadius": 16,
+                          "padding": [
+                            7,
+                            11
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "buTPr",
+                              "name": "完成 29",
+                              "fill": "#166534",
+                              "content": "完成 29",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "d9byP",
+                          "name": "Filter 失敗 3",
+                          "fill": "#FEE2E2",
+                          "cornerRadius": 16,
+                          "padding": [
+                            7,
+                            11
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "j6ipgV",
+                              "name": "失敗 3",
+                              "fill": "#B91C1C",
+                              "content": "失敗 3",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "z5yLq",
+                      "name": "Retry failed action",
+                      "fill": "$accent",
+                      "content": "重新上傳失敗檔案",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "h7PI6d",
+                  "name": "Upload status list",
+                  "width": "fill_container",
+                  "height": 280,
+                  "fill": "$surface",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NvERZ",
+                      "name": "File status row 1",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FFFFFF",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "bFtwi",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "bAsZy",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "#16A34A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "iu8oa",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "DC084_20260709.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "z4TZ5",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "cqaZI",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "24 筆資料已寫入",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "t47Te9",
+                              "name": "File status label",
+                              "fill": "#16A34A",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "完成",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xl6fG",
+                      "name": "File status row 2",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FAFBFD",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Jcmy1",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "eWxOr",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "#16A34A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "g2bXWe",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "TW_growth_202607.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nfbgU",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "hZ6lz",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "31 筆資料已寫入",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "JvO5M",
+                              "name": "File status label",
+                              "fill": "#16A34A",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "完成",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "sVUUG",
+                      "name": "File status row 3",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FFFFFF",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "rOh6H",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "O3sCp",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "loader-circle",
+                              "library": "lucide",
+                              "fill": "#D97706"
+                            },
+                            {
+                              "type": "text",
+                              "id": "TDiPj",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "US_income_Q2.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uaOjv",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "uTVKV",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "正在驗證欄位 · 72%",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "HeOFC",
+                              "name": "File status label",
+                              "fill": "#D97706",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "處理中",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LMeSd",
+                      "name": "File status row 4",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FAFBFD",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lF4ZM",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "dAbqU",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "clock-3",
+                              "library": "lucide",
+                              "fill": "#64748B"
+                            },
+                            {
+                              "type": "text",
+                              "id": "VtDuE",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "ETF_holdings_07.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Jrxro",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "UlQVO",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "第 4 個等待處理",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "MJ6zj",
+                              "name": "File status label",
+                              "fill": "#64748B",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "排隊中",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "MxkLl",
+                      "name": "File status row 5",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FFFFFF",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "szm9F",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "zEYQU",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "#DC2626"
+                            },
+                            {
+                              "type": "text",
+                              "id": "UZcW4",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "bond_portfolio.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "B1HzU",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "K0VQH",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "缺少「Ticker」欄位",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "VLdwC",
+                              "name": "File status label",
+                              "fill": "#DC2626",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "失敗",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "u4cJbN",
+                      "name": "File status row 6",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FAFBFD",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "gePN8",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "RT5ZK",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "loader-circle",
+                              "library": "lucide",
+                              "fill": "#D97706"
+                            },
+                            {
+                              "type": "text",
+                              "id": "MW0TQ",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "APAC_value_202607.xls",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "m1E2b",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "x4ASQ6",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "正在讀取工作表 · 38%",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "qXGn8",
+                              "name": "File status label",
+                              "fill": "#D97706",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "處理中",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "w4n1Pz",
+                  "name": "Status list pagination",
+                  "width": "fill_container",
+                  "height": 52,
+                  "fill": "#F8FAFC",
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dzxHY",
+                      "name": "Visible results count",
+                      "fill": "$text-secondary",
+                      "content": "顯示 1–6，共 50 個檔案",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oQW8V",
+                      "name": "Pagination controls",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "H0fud2",
+                          "name": "Page ‹",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "fB6vc",
+                              "name": "Page label ‹",
+                              "fill": "$text-secondary",
+                              "content": "‹",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "UlGgI",
+                          "name": "Page 1",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "$accent",
+                          "cornerRadius": 8,
+                          "stroke": "$accent",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "vQ9fp",
+                              "name": "Page label 1",
+                              "fill": "#FFFFFF",
+                              "content": "1",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "zjweV",
+                          "name": "Page 2",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "pBlfj",
+                              "name": "Page label 2",
+                              "fill": "$text-secondary",
+                              "content": "2",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "XIztY",
+                          "name": "Page 3",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bm3K5",
+                              "name": "Page label 3",
+                              "fill": "$text-secondary",
+                              "content": "3",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "C6sovC",
+                          "name": "Page …",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "aKCPs",
+                              "name": "Page label …",
+                              "fill": "$text-secondary",
+                              "content": "…",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ndaCl",
+                          "name": "Page 9",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "G2r7F",
+                              "name": "Page label 9",
+                              "fill": "$text-secondary",
+                              "content": "9",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "AbmeQ",
+                          "name": "Page ›",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YtxH1",
+                              "name": "Page label ›",
+                              "fill": "$text-secondary",
+                              "content": "›",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -255,7 +1195,7 @@
       "name": "Holdings Database — By Day",
       "clip": true,
       "width": 1440,
-      "height": 1024,
+      "height": 1500,
       "fill": [
         "$bg",
         {
@@ -334,7 +1274,7 @@
                   "id": "uCULp",
                   "name": "Page title",
                   "fill": "$text-primary",
-                  "content": "單日淨值資料",
+                  "content": "單日資料",
                   "lineHeight": 1.05,
                   "fontFamily": "$font-ui",
                   "fontSize": 52,
@@ -3802,6 +4742,674 @@
                                       "icon": "chevron-right",
                                       "library": "lucide",
                                       "fill": "$text-primary"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FlwFo",
+                  "name": "Data view controls",
+                  "width": "fill_container",
+                  "height": 72,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 14,
+                  "stroke": "#E2E8F0",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "MxBRw",
+                      "name": "View mode radio group",
+                      "fill": "#FFFFFF00",
+                      "gap": 20,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "wkl9v",
+                          "name": "View mode label",
+                          "fill": "#475569",
+                          "content": "資料檢視",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ibFeL",
+                          "name": "查看標的 radio option",
+                          "fill": "#FFFFFF00",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "J04Mt",
+                              "name": "查看標的 radio",
+                              "fill": "#4F46E5",
+                              "width": 18,
+                              "height": 18,
+                              "stroke": "#4F46E5",
+                              "strokeWidth": 5
+                            },
+                            {
+                              "type": "text",
+                              "id": "gGgs4",
+                              "name": "查看標的 label",
+                              "fill": "#312E81",
+                              "content": "查看標的",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sMqCe",
+                          "name": "查看專戶 radio option",
+                          "fill": "#FFFFFF00",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "rCYIe",
+                              "name": "查看專戶 radio",
+                              "fill": "#FFFFFF",
+                              "width": 18,
+                              "height": 18,
+                              "stroke": "#94A3B8",
+                              "strokeWidth": 2
+                            },
+                            {
+                              "type": "text",
+                              "id": "vzMoT",
+                              "name": "查看專戶 label",
+                              "fill": "#475569",
+                              "content": "查看專戶",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vr8LY",
+                      "name": "View dropdown menus",
+                      "fill": "#FFFFFF00",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "dnQY0",
+                          "name": "標的名稱 dropdown",
+                          "width": 280,
+                          "fill": "#FFFFFF00",
+                          "layout": "vertical",
+                          "gap": 5,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "s86mH",
+                              "name": "標的名稱 dropdown label",
+                              "fill": "#64748B",
+                              "content": "標的名稱",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "WgF5l",
+                              "name": "標的名稱 dropdown field",
+                              "width": "fill_container",
+                              "height": 38,
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 8,
+                              "stroke": "#CBD5E1",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "l9vQta",
+                                  "name": "標的名稱 selected value",
+                                  "fill": "#172033",
+                                  "content": "HIDV — AB US High Dividend ETF",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "jMEIN",
+                                  "name": "標的名稱 dropdown chevron",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "chevron-down",
+                                  "library": "lucide",
+                                  "fill": "#64748B"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "gmtBZ",
+                          "name": "資料指標 dropdown",
+                          "width": 260,
+                          "fill": "#FFFFFF00",
+                          "layout": "vertical",
+                          "gap": 5,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Zazpy",
+                              "name": "資料指標 dropdown label",
+                              "fill": "#64748B",
+                              "content": "資料指標",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "w8XTS",
+                              "name": "資料指標 dropdown field",
+                              "width": "fill_container",
+                              "height": 38,
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 8,
+                              "stroke": "#CBD5E1",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "X9hyI",
+                                  "name": "資料指標 selected value",
+                                  "fill": "#172033",
+                                  "content": "各專戶持有市值（標的幣別）",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "ekwH1",
+                                  "name": "資料指標 dropdown chevron",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "chevron-down",
+                                  "library": "lucide",
+                                  "fill": "#64748B"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qjpoP",
+                  "name": "Holdings visualization card",
+                  "width": "fill_container",
+                  "height": 410,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "stroke": "#E2E8F0",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#1E293B10",
+                    "offset": {
+                      "x": 0,
+                      "y": 10
+                    },
+                    "blur": 30
+                  },
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "kBodh",
+                      "name": "Visualization header",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF00",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "x3D6xp",
+                          "name": "Visualization title block",
+                          "fill": "#FFFFFF00",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CPmVh",
+                              "name": "Visualization title",
+                              "fill": "#172033",
+                              "content": "HIDV 各專戶持有市值分布",
+                              "fontFamily": "Inter",
+                              "fontSize": 18,
+                              "fontWeight": "800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "L28PRM",
+                              "name": "Visualization subtitle",
+                              "fill": "#64748B",
+                              "content": "各專戶持有市值（標的幣別）・USD",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "QlhZ5",
+                          "name": "Visualization total",
+                          "fill": "#4F46E5",
+                          "content": "總計 12.46M",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FALRR",
+                      "name": "Pie chart and legend",
+                      "width": "fill_container",
+                      "height": 260,
+                      "fill": "#FFFFFF00",
+                      "gap": 54,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Z7Bav",
+                          "name": "Account market value pie chart",
+                          "width": 230,
+                          "height": 230,
+                          "fill": "#FFFFFF00",
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "Pmhwu",
+                              "x": 5,
+                              "y": 5,
+                              "name": "安聯多元資產專戶 slice",
+                              "sweepAngle": 150,
+                              "fill": "#4F46E5",
+                              "width": 220,
+                              "height": 220
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "f037w",
+                              "x": 5,
+                              "y": 5,
+                              "name": "國泰收益成長專戶 slice",
+                              "startAngle": 150,
+                              "sweepAngle": 100,
+                              "fill": "#06B6D4",
+                              "width": 220,
+                              "height": 220
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "x0OGvO",
+                              "x": 5,
+                              "y": 5,
+                              "name": "富邦穩健收益專戶 slice",
+                              "startAngle": 250,
+                              "sweepAngle": 65,
+                              "fill": "#F59E0B",
+                              "width": 220,
+                              "height": 220
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "aUHOg",
+                              "x": 5,
+                              "y": 5,
+                              "name": "其他專戶 slice",
+                              "startAngle": 315,
+                              "sweepAngle": 45,
+                              "fill": "#CBD5E1",
+                              "width": 220,
+                              "height": 220
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LQTt7",
+                          "name": "Pie chart legend",
+                          "width": 390,
+                          "fill": "#FFFFFF00",
+                          "layout": "vertical",
+                          "gap": 14,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "DwA3p",
+                              "name": "安聯多元資產專戶 legend row",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF00",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "XmazQ",
+                                  "name": "安聯多元資產專戶 legend key",
+                                  "fill": "#FFFFFF00",
+                                  "gap": 10,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "xNZTM",
+                                      "name": "安聯多元資產專戶 legend color",
+                                      "fill": "#4F46E5",
+                                      "width": 10,
+                                      "height": 10
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "JwU6B",
+                                      "name": "安聯多元資產專戶 legend label",
+                                      "fill": "#334155",
+                                      "content": "安聯多元資產專戶",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Hn8ex",
+                                  "name": "安聯多元資產專戶 legend values",
+                                  "fill": "#FFFFFF00",
+                                  "gap": 18,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "TYQEA",
+                                      "name": "安聯多元資產專戶 value",
+                                      "fill": "#172033",
+                                      "content": "5.19M",
+                                      "fontFamily": "Geist Mono",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "hNB0a",
+                                      "name": "安聯多元資產專戶 percent",
+                                      "fill": "#64748B",
+                                      "content": "41.7%",
+                                      "fontFamily": "Geist Mono",
+                                      "fontSize": 12,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "L0opCn",
+                              "name": "國泰收益成長專戶 legend row",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF00",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "okaJx",
+                                  "name": "國泰收益成長專戶 legend key",
+                                  "fill": "#FFFFFF00",
+                                  "gap": 10,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "u6jko",
+                                      "name": "國泰收益成長專戶 legend color",
+                                      "fill": "#06B6D4",
+                                      "width": 10,
+                                      "height": 10
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "LArnt",
+                                      "name": "國泰收益成長專戶 legend label",
+                                      "fill": "#334155",
+                                      "content": "國泰收益成長專戶",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "JJWbo",
+                                  "name": "國泰收益成長專戶 legend values",
+                                  "fill": "#FFFFFF00",
+                                  "gap": 18,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "JHi2S",
+                                      "name": "國泰收益成長專戶 value",
+                                      "fill": "#172033",
+                                      "content": "3.46M",
+                                      "fontFamily": "Geist Mono",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "ex1S8",
+                                      "name": "國泰收益成長專戶 percent",
+                                      "fill": "#64748B",
+                                      "content": "27.8%",
+                                      "fontFamily": "Geist Mono",
+                                      "fontSize": 12,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "SvXBS",
+                              "name": "富邦穩健收益專戶 legend row",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF00",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "lEkAH",
+                                  "name": "富邦穩健收益專戶 legend key",
+                                  "fill": "#FFFFFF00",
+                                  "gap": 10,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "d4Mb6e",
+                                      "name": "富邦穩健收益專戶 legend color",
+                                      "fill": "#F59E0B",
+                                      "width": 10,
+                                      "height": 10
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "UXuJ3",
+                                      "name": "富邦穩健收益專戶 legend label",
+                                      "fill": "#334155",
+                                      "content": "富邦穩健收益專戶",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "gjscs",
+                                  "name": "富邦穩健收益專戶 legend values",
+                                  "fill": "#FFFFFF00",
+                                  "gap": 18,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "GZdFF",
+                                      "name": "富邦穩健收益專戶 value",
+                                      "fill": "#172033",
+                                      "content": "2.25M",
+                                      "fontFamily": "Geist Mono",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Ibt7q",
+                                      "name": "富邦穩健收益專戶 percent",
+                                      "fill": "#64748B",
+                                      "content": "18.1%",
+                                      "fontFamily": "Geist Mono",
+                                      "fontSize": 12,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Q4MxV2",
+                              "name": "其他專戶 legend row",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF00",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "o3rt0Q",
+                                  "name": "其他專戶 legend key",
+                                  "fill": "#FFFFFF00",
+                                  "gap": 10,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "O94zJH",
+                                      "name": "其他專戶 legend color",
+                                      "fill": "#CBD5E1",
+                                      "width": 10,
+                                      "height": 10
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "M9Gki1",
+                                      "name": "其他專戶 legend label",
+                                      "fill": "#334155",
+                                      "content": "其他專戶",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "rRZas",
+                                  "name": "其他專戶 legend values",
+                                  "fill": "#FFFFFF00",
+                                  "gap": 18,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "NTh8s",
+                                      "name": "其他專戶 value",
+                                      "fill": "#172033",
+                                      "content": "1.56M",
+                                      "fontFamily": "Geist Mono",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "p030nz",
+                                      "name": "其他專戶 percent",
+                                      "fill": "#64748B",
+                                      "content": "12.4%",
+                                      "fontFamily": "Geist Mono",
+                                      "fontSize": 12,
+                                      "fontWeight": "600"
                                     }
                                   ]
                                 }

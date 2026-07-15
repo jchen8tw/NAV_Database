@@ -24,6 +24,7 @@ HOLDINGS_COLUMNS = [
     "類型別",
     "庫存單位數",
     "基金淨值/ETF收盤價",
+    "持有市值(帳戶幣別)",
     "持有市值(標的幣別)",
     ISSUE_SIZE_COLUMN,
     NAV_RATIO_COLUMN,

@@ -152,6 +152,59 @@ def make_table(
     )
 
 
+def make_upload_status_table(rows: list[dict[str, str]]) -> dash_table.DataTable:
+    """Render a compact, paginated status list for a batch of workbooks."""
+    return dash_table.DataTable(
+        id="upload-status-table",
+        columns=[
+            {"name": "檔案", "id": "filename"},
+            {"name": "狀態", "id": "status"},
+            {"name": "詳細資訊", "id": "detail"},
+        ],
+        data=rows,
+        page_size=6,
+        page_action="native",
+        sort_action="native",
+        style_table={"overflowX": "auto"},
+        style_cell={
+            "fontFamily": "Inter, system-ui, sans-serif",
+            "fontSize": 12,
+            "padding": "11px 16px",
+            "textAlign": "left",
+            "border": "none",
+            "borderBottom": "1px solid #e2e8f0",
+        },
+        style_cell_conditional=[
+            {
+                "if": {"column_id": "filename"},
+                "fontFamily": "Geist Mono, ui-monospace, monospace",
+                "fontWeight": 600,
+                "width": "40%",
+            },
+            {"if": {"column_id": "status"}, "fontWeight": 700, "width": "12%"},
+            {"if": {"column_id": "detail"}, "color": "#64748b"},
+        ],
+        style_header={
+            "backgroundColor": "#f8fafc",
+            "color": "#64748b",
+            "fontWeight": 700,
+            "border": "none",
+            "borderBottom": "1px solid #e2e8f0",
+        },
+        style_data_conditional=[
+            {
+                "if": {"filter_query": '{status} = "完成"', "column_id": "status"},
+                "color": "#166534",
+            },
+            {
+                "if": {"filter_query": '{status} = "失敗"', "column_id": "status"},
+                "color": "#b91c1c",
+            },
+            {"if": {"row_index": "odd"}, "backgroundColor": "#fafbfd"},
+        ],
+    )
+
+
 app = Dash(__name__, suppress_callback_exceptions=True)
 app.title = "Holdings Database"
 
@@ -210,47 +263,129 @@ def update_daily_table(report_date: str | None):
 
 
 @app.callback(
+    Output("daily-selection-label", "children"),
+    Output("daily-selection-dropdown", "options"),
+    Output("daily-selection-dropdown", "value"),
+    Output("daily-metric-dropdown", "options"),
+    Output("daily-metric-dropdown", "value"),
+    Input("daily-date-picker", "date"),
+    Input("daily-view-mode", "value"),
+)
+def update_daily_visualization_controls(report_date: str | None, mode: str):
+    holdings = load_holdings_by_date(report_date)
+    options = daily.selector_options(holdings, mode)
+    selection = options[0]["value"] if options else None
+    metric_options = daily.METRIC_OPTIONS[mode]
+    return (
+        "標的名稱" if mode == daily.TARGET_MODE else "專戶名稱",
+        options,
+        selection,
+        metric_options,
+        daily.default_metric(mode),
+    )
+
+
+@app.callback(
+    Output("daily-visualization", "figure"),
+    Output("daily-chart-title", "children"),
+    Output("daily-chart-subtitle", "children"),
+    Output("daily-chart-total", "children"),
+    Input("daily-date-picker", "date"),
+    Input("daily-view-mode", "value"),
+    Input("daily-selection-dropdown", "value"),
+    Input("daily-metric-dropdown", "value"),
+)
+def update_daily_visualization(
+    report_date: str | None, mode: str, selection: str | None, metric: str | None
+):
+    return daily.make_visualization(
+        load_holdings_by_date(report_date), mode, selection, metric
+    )
+
+
+@app.callback(
     Output("upload-status", "children"),
     Output("upload-status", "className"),
-    Output("table-container", "children"),
     Input("excel-upload", "contents"),
     State("excel-upload", "filename"),
     prevent_initial_call=True,
 )
-def show_uploaded_workbook(contents: str | None, filename: str | None):
+def show_uploaded_workbooks(
+    contents: list[str] | None, filenames: list[str] | None
+):
     if not contents:
-        return "No file was received.", "status status--error", None
+        return "未收到任何檔案。", "batch-status batch-status--error"
 
-    suffix = Path(filename or "").suffix.lower()
-    if suffix not in {".xlsx", ".xls"}:
-        return (
-            "Please upload an Excel file (.xlsx or .xls).",
-            "status status--error",
-            None,
+    filenames = filenames or []
+
+    rows: list[dict[str, str]] = []
+    completed = 0
+    imported_rows = 0
+    for index, file_contents in enumerate(contents):
+        filename = filenames[index] if index < len(filenames) else f"檔案 {index + 1}"
+        if Path(filename).suffix.lower() not in {".xlsx", ".xls"}:
+            rows.append(
+                {
+                    "filename": filename,
+                    "status": "失敗",
+                    "detail": "不支援的格式；請上傳 .xlsx 或 .xls",
+                }
+            )
+            continue
+
+        try:
+            df = parse_excel(file_contents)
+            store_dataframe(df)
+        except Exception as exc:
+            rows.append(
+                {"filename": filename, "status": "失敗", "detail": str(exc)}
+            )
+            continue
+
+        completed += 1
+        imported_rows += df.height
+        rows.append(
+            {
+                "filename": filename,
+                "status": "完成",
+                "detail": (
+                    f"{df.height:,} 列 · {df.width:,} 欄 · "
+                    f"資料日期 {df.get_column(DATE_COLUMN).item(0)}"
+                ),
+            }
         )
 
-    try:
-        df = parse_excel(contents)
-        database_rows = store_dataframe(df)
-    except Exception as exc:
-        return (
-            f"Could not process {filename or 'the uploaded file'}: {exc}",
-            "status status--error",
-            None,
-        )
-
-    status = html.Div(
+    failed = len(rows) - completed
+    status = html.Section(
         [
-            html.Strong(filename or "Uploaded workbook"),
-            html.Span(
-                f"{df.height:,} rows · {df.width:,} columns · "
-                f"{database_rows:,} records in SQLite · "
-                f"{df.get_column(DATE_COLUMN).item(0)}"
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Strong(f"已處理 {len(rows)} 個 Excel 檔案"),
+                            html.Span(
+                                f"{completed} 個完成 · {failed} 個失敗 · "
+                                f"本批次共寫入 {imported_rows:,} 筆資料"
+                            ),
+                        ],
+                        className="batch-summary-copy",
+                    ),
+                    html.Div(
+                        [
+                            html.Span("完成率"),
+                            html.Strong(f"{completed / len(rows):.0%}"),
+                        ],
+                        className="batch-completion",
+                    ),
+                ],
+                className="batch-summary",
             ),
+            make_upload_status_table(rows),
         ],
-        className="file-summary",
+        className="batch-card",
     )
-    return status, "status status--success", make_table(df)
+    modifier = "batch-status--success" if not failed else "batch-status--mixed"
+    return status, f"batch-status {modifier}"
 
 
 if __name__ == "__main__":

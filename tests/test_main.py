@@ -121,6 +121,7 @@ class DatabaseTests(unittest.TestCase):
             database.ISSUE_SIZE_COLUMN: [1_000_000] * row_count,
             database.NAV_RATIO_COLUMN: [1.5] * row_count,
             database.ASSET_RATIO_COLUMN: [0.25] * row_count,
+            daily.ACCOUNT_VALUE_COLUMN: [500.0] * row_count,
         }
         return pl.DataFrame(
             rows,
@@ -132,6 +133,7 @@ class DatabaseTests(unittest.TestCase):
                 "類型別": pl.String,
                 "庫存單位數": pl.Float64,
                 "基金淨值/ETF收盤價": pl.Float64,
+                daily.ACCOUNT_VALUE_COLUMN: pl.Float64,
                 "持有市值(標的幣別)": pl.Float64,
                 database.ACCOUNT_NAME_COLUMN: pl.String,
                 database.ISSUE_SIZE_COLUMN: pl.Int64,
@@ -258,13 +260,24 @@ class PresentationTests(unittest.TestCase):
 
         upload_copy = text_content(upload.layout())
         self.assertIn("投資組合資料庫", upload_copy)
-        self.assertIn("上傳excel以存入資料庫", upload_copy)
-        self.assertIn("Drop Excel files here", upload_copy)
-        self.assertIn("or click to choose files", upload_copy)
+        self.assertIn("請將保管銀行的越權報表上傳，支援世華銀行與中信銀行格式", upload_copy)
+        self.assertIn("將多個 Excel 檔案拖曳到這裡", upload_copy)
+        self.assertIn("或點擊選擇檔案（可一次選取多個）", upload_copy)
+        self.assertTrue(upload.layout().children[1].multiple)
 
         daily_copy = text_content(daily.layout([], lambda _: pl.DataFrame(), main.make_table))
         self.assertIn("單日的所有基金與全委帳戶的資料", daily_copy)
         self.assertIn("選擇要檢視的單日資料", daily_copy)
+        self.assertIn("資料檢視", daily_copy)
+        daily_layout = daily.layout([], lambda _: pl.DataFrame(), main.make_table)
+        self.assertEqual(
+            [option["label"] for option in daily_layout.children[3].children[0].children[1].options],
+            ["查看標的", "查看專戶"],
+        )
+        daily_graph = daily_layout.children[4].children[1]
+        self.assertEqual(daily_graph.style, {"width": "100%", "height": "440px"})
+        self.assertTrue(daily_graph.responsive)
+        self.assertNotIn("responsive", daily_graph.config)
 
         history_copy = text_content(history.layout([], main.make_history_figure))
         self.assertIn("每條線代表一個 ISIN；跨帳戶的同日資料已合併", history_copy)
@@ -316,12 +329,90 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(history.format_range([{"report_date": "2025-01-01"}]), "2025 / 01 / 01")
         self.assertEqual(history.format_range([{"report_date": "2025-02-01"}, {"report_date": "2025-01-01"}]), "2025 / 01 / 01 — 2025 / 02 / 01")
 
+    def test_daily_visualization_options_and_chart_types(self):
+        holdings = pl.DataFrame(
+            {
+                database.ACCOUNT_NAME_COLUMN: ["Alpha", "Beta", "Alpha"],
+                "標的名稱": ["Fund A", "Fund A", "Fund B"],
+                "庫存單位數": [10.0, 30.0, 5.0],
+                "持有市值(帳戶幣別)": [100.0, 300.0, 50.0],
+                "持有市值(標的幣別)": [120.0, 360.0, 60.0],
+            }
+        )
+        self.assertEqual(
+            [option["value"] for option in daily.selector_options(holdings, daily.TARGET_MODE)],
+            ["Fund A", "Fund B"],
+        )
+        self.assertEqual(
+            [option["value"] for option in daily.selector_options(holdings, daily.ACCOUNT_MODE)],
+            ["Alpha", "Beta"],
+        )
+
+        target_figure, title, _, total = daily.make_visualization(
+            holdings, daily.TARGET_MODE, "Fund A", daily.TARGET_VALUE_COLUMN
+        )
+        self.assertEqual(target_figure.data[0].type, "pie")
+        self.assertEqual(tuple(target_figure.data[0].domain.x), (0.04, 0.46))
+        self.assertEqual(tuple(target_figure.data[0].domain.y), (0.14, 0.86))
+        self.assertIsNone(target_figure.layout.height)
+        self.assertEqual(target_figure.layout.legend.maxheight, 0.86)
+        self.assertIn("Fund A", title)
+        self.assertEqual(total, "總計 480.00")
+
+        account_figure, _, _, total = daily.make_visualization(
+            holdings, daily.ACCOUNT_MODE, "Alpha", daily.UNITS_COLUMN
+        )
+        self.assertEqual(account_figure.data[0].type, "bar")
+        self.assertEqual(account_figure.data[0].orientation, "h")
+        self.assertEqual(account_figure.data[0].width, 0.9)
+        self.assertEqual(account_figure.layout.bargap, 0.08)
+        self.assertIsNone(account_figure.layout.height)
+        self.assertEqual(account_figure.layout.xaxis.tickfont.size, 14)
+        self.assertEqual(account_figure.layout.yaxis.tickfont.size, 14)
+        self.assertEqual(account_figure.layout.margin.l, 360)
+        self.assertEqual(account_figure.layout.margin.r, 32)
+        self.assertFalse(account_figure.layout.margin.autoexpand)
+        self.assertFalse(account_figure.layout.showlegend)
+        self.assertFalse(account_figure.layout.yaxis.automargin)
+        self.assertEqual(total, "總計 15.000")
+
     def test_upload_callback_validates_input(self):
-        self.assertEqual(main.show_uploaded_workbook(None, None), ("No file was received.", "status status--error", None))
-        message, class_name, table = main.show_uploaded_workbook("data:text/plain;base64,eA==", "report.txt")
-        self.assertIn("Excel file", message)
-        self.assertEqual(class_name, "status status--error")
-        self.assertIsNone(table)
+        self.assertEqual(
+            main.show_uploaded_workbooks(None, None),
+            ("未收到任何檔案。", "batch-status batch-status--error"),
+        )
+        message, class_name = main.show_uploaded_workbooks(
+            ["data:text/plain;base64,eA=="], ["report.txt"]
+        )
+        self.assertEqual(class_name, "batch-status batch-status--mixed")
+        self.assertIn("1 個失敗", " ".join(text_content(message)))
+        status_table = message.children[1]
+        self.assertEqual(status_table.data[0]["status"], "失敗")
+        self.assertIn(".xlsx", status_table.data[0]["detail"])
+
+    def test_upload_callback_processes_each_workbook_independently(self):
+        frames = [
+            pl.DataFrame({database.DATE_COLUMN: ["2025-01-01"], "ISIN": ["F1"]}),
+            pl.DataFrame({database.DATE_COLUMN: ["2025-01-02"], "ISIN": ["F2"]}),
+        ]
+        with (
+            patch("main.parse_excel", side_effect=[frames[0], ValueError("bad workbook"), frames[1]]),
+            patch("main.store_dataframe", side_effect=[1, 2]) as store,
+        ):
+            result, class_name = main.show_uploaded_workbooks(
+                ["one", "bad", "two"], ["one.xlsx", "bad.xlsx", "two.xls"]
+            )
+
+        self.assertEqual(class_name, "batch-status batch-status--mixed")
+        self.assertEqual(store.call_count, 2)
+        self.assertIn("2 個完成 · 1 個失敗", " ".join(text_content(result)))
+        self.assertEqual(
+            [row["status"] for row in result.children[1].data],
+            ["完成", "失敗", "完成"],
+        )
+        self.assertEqual(result.children[1].page_size, 6)
+
+
 
 
 if __name__ == "__main__":
