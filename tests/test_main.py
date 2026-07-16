@@ -226,10 +226,11 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual(daily_holdings[database.ISSUE_SIZE_COLUMN].to_list(), [1_000_000, 1_000_000])
         self.assertEqual(daily_holdings[database.NAV_RATIO_COLUMN].to_list(), [1.5, 1.5])
         self.assertEqual(daily_holdings[database.ASSET_RATIO_COLUMN].to_list(), [0.25, 0.25])
-        history_rows = database.load_nav_history(self.database)
-        self.assertEqual([(row["report_date"], row["nav"]) for row in history_rows], [("2025-01-01", 10.0), ("2025-01-02", 12.0)])
+        history_rows = database.load_holdings_history(self.database)
+        self.assertEqual(history_rows.columns, [database.DATE_COLUMN, *database.HOLDINGS_COLUMNS])
+        self.assertEqual(history_rows.height, 3)
 
-    def test_nav_history_uses_median_across_accounts(self):
+    def test_holdings_history_preserves_accounts(self):
         data = self.holdings({
             "ISIN": ["F1", "F1", "F1"],
             database.DATE_COLUMN: ["2025-01-02"] * 3,
@@ -244,12 +245,12 @@ class DatabaseTests(unittest.TestCase):
         )
         database.store_dataframe(data, self.database)
 
-        self.assertEqual(database.load_nav_history(self.database)[0]["nav"], 12.1)
+        self.assertEqual(database.load_holdings_history(self.database).height, 3)
 
     def test_loaders_return_empty_results_without_ready_database(self):
         self.assertFalse(database.holdings_table_is_ready(self.database))
         self.assertEqual(database.load_available_dates(self.database), [])
-        self.assertEqual(database.load_nav_history(self.database), [])
+        self.assertTrue(database.load_holdings_history(self.database).is_empty())
         self.assertTrue(database.load_holdings_by_date(None, self.database).is_empty())
 
 
@@ -279,22 +280,66 @@ class PresentationTests(unittest.TestCase):
         self.assertTrue(daily_graph.responsive)
         self.assertNotIn("responsive", daily_graph.config)
 
-        history_copy = text_content(history.layout([], main.make_history_figure))
-        self.assertIn("每條線代表一個 ISIN；跨帳戶的同日資料已合併", history_copy)
+        history_copy = text_content(history.layout(pl.DataFrame()))
+        self.assertIn("歷史資料", history_copy)
+        self.assertIn("跨日期檢視所有標的與全委帳戶的資料趨勢", history_copy)
 
-    def test_history_figure_groups_series_and_handles_empty_state(self):
-        observations = [
-            {"report_date": "2025-01-01", "isin": "F1", "fund_name": "Fund 1", "nav": 10.0},
-            {"report_date": "2025-01-02", "isin": "F1", "fund_name": "Fund 1", "nav": 11.0},
-            {"report_date": "2025-01-01", "isin": "F2", "fund_name": "Fund 2", "nav": 20.0},
-        ]
-        figure = main.make_history_figure(observations)
-        self.assertEqual(len(figure.data), 2)
-        self.assertEqual(list(figure.data[0].x), ["2025-01-01", "2025-01-02"])
+    def test_history_figure_components_summary_and_empty_state(self):
+        observations = pl.DataFrame({
+            database.DATE_COLUMN: ["2025-01-01", "2025-01-01", "2025-01-02"],
+            database.ACCOUNT_NAME_COLUMN: ["Alpha", "Beta", "Alpha"],
+            "標的名稱": ["Fund 1"] * 3,
+            daily.TARGET_VALUE_COLUMN: [10.0, 20.0, 15.0],
+        })
+        figure, _, _ = history.make_figure(observations, daily.TARGET_MODE, "Fund 1", daily.TARGET_VALUE_COLUMN)
+        self.assertEqual([trace.name for trace in figure.data], ["Alpha", "Beta", "總計"])
+        self.assertEqual(list(figure.data[-1].y), [30.0, 15.0])
         self.assertTrue(figure.layout.xaxis.rangeslider.visible)
-        empty = main.make_history_figure([])
+        empty, _, _ = history.make_figure(pl.DataFrame(), daily.TARGET_MODE, None, daily.TARGET_VALUE_COLUMN)
         self.assertEqual(len(empty.layout.annotations), 1)
         self.assertFalse(empty.layout.xaxis.visible)
+
+    def test_history_metric_matrix_and_representative_median(self):
+        self.assertIn(database.ASSET_RATIO_COLUMN, history.METRICS[daily.TARGET_MODE])
+        self.assertNotIn(database.NAV_RATIO_COLUMN, history.METRICS[daily.TARGET_MODE])
+        self.assertIn(database.NAV_RATIO_COLUMN, history.METRICS[daily.ACCOUNT_MODE])
+        self.assertNotIn(history.NAV_COLUMN, history.METRICS[daily.ACCOUNT_MODE])
+        self.assertNotIn(database.ISSUE_SIZE_COLUMN, history.METRICS[daily.ACCOUNT_MODE])
+
+        observations = pl.DataFrame({
+            database.DATE_COLUMN: ["2025-01-01", "2025-01-01"],
+            database.ACCOUNT_NAME_COLUMN: ["Alpha", "Beta"],
+            "標的名稱": ["Fund 1", "Fund 1"],
+            history.NAV_COLUMN: [10.0, 14.0],
+        })
+        figure, _, _ = history.make_figure(
+            observations, daily.TARGET_MODE, "Fund 1", history.NAV_COLUMN
+        )
+        self.assertEqual(
+            [trace.name for trace in figure.data],
+            ["Alpha", "Beta", "代表值（中位數）"],
+        )
+        self.assertEqual(list(figure.data[-1].y), [12.0])
+
+    def test_history_controls_filter_range_and_reset_stale_values(self):
+        observations = pl.DataFrame({
+            database.DATE_COLUMN: ["2025-01-01", "2025-02-01"],
+            database.ACCOUNT_NAME_COLUMN: ["Alpha", "Beta"],
+            "標的名稱": ["Old Fund", "New Fund"],
+        })
+        label, options, selection, metrics, metric = history.resolve_controls(
+            observations,
+            daily.ACCOUNT_MODE,
+            "2025-02-01",
+            "2025-02-01",
+            "Alpha",
+            history.NAV_COLUMN,
+        )
+        self.assertEqual(label, "專戶名稱")
+        self.assertEqual([option["value"] for option in options], ["Beta"])
+        self.assertEqual(selection, "Beta")
+        self.assertNotIn(history.NAV_COLUMN, [option["value"] for option in metrics])
+        self.assertEqual(metric, daily.ACCOUNT_VALUE_COLUMN)
 
     def test_make_table_marks_numeric_columns(self):
         table = main.make_table(
@@ -325,9 +370,7 @@ class PresentationTests(unittest.TestCase):
         self.assertIn("尚無資料", empty.children)
         no_rows = daily.make_table_content(pl.DataFrame(), "2025-01-01", main.make_table)
         self.assertIn("所選日期", no_rows.children)
-        self.assertEqual(history.format_range([]), "尚無日期")
-        self.assertEqual(history.format_range([{"report_date": "2025-01-01"}]), "2025 / 01 / 01")
-        self.assertEqual(history.format_range([{"report_date": "2025-02-01"}, {"report_date": "2025-01-01"}]), "2025 / 01 / 01 — 2025 / 02 / 01")
+        self.assertEqual(history.normalize_dates("2025-02-01", "2025-01-01"), ("2025-01-01", "2025-02-01"))
 
     def test_daily_visualization_options_and_chart_types(self):
         holdings = pl.DataFrame(

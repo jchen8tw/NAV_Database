@@ -1,8 +1,5 @@
 from pathlib import Path
-from typing import Any
-
 import polars as pl
-import plotly.graph_objects as go
 from dash import Dash, Input, Output, State, dash_table, dcc, html
 
 from src.pages import daily, history, upload
@@ -13,7 +10,7 @@ from src.database import (
     NAV_RATIO_COLUMN,
     load_available_dates,
     load_holdings_by_date,
-    load_nav_history,
+    load_holdings_history,
     store_dataframe,
 )
 from src.reader import parse_excel
@@ -27,75 +24,6 @@ NUMERIC_COLUMNS = (
     NAV_RATIO_COLUMN,
     ASSET_RATIO_COLUMN,
 )
-
-
-def make_history_figure(history: list[dict[str, Any]]) -> go.Figure:
-    """Build a line plot containing every mutual fund in the history table."""
-    figure = go.Figure()
-    colors = ["#4F46E5", "#0891B2", "#F59E0B", "#DB2777", "#16A34A"]
-    series: dict[str, list[dict[str, Any]]] = {}
-    for observation in history:
-        series.setdefault(observation["isin"], []).append(observation)
-
-    for index, (isin, observations) in enumerate(series.items()):
-        fund_name = observations[-1]["fund_name"]
-        figure.add_trace(
-            go.Scatter(
-                x=[observation["report_date"] for observation in observations],
-                y=[observation["nav"] for observation in observations],
-                mode="lines+markers",
-                name=fund_name,
-                line={"width": 2.4, "color": colors[index % len(colors)]},
-                marker={"size": 6},
-                customdata=[isin] * len(observations),
-                hovertemplate=(
-                    "<b>%{fullData.name}</b><br>"
-                    "ISIN: %{customdata}<br>"
-                    "Date: %{x|%Y-%m-%d}<br>"
-                    "NAV: %{y:,.4f}<extra></extra>"
-                ),
-            )
-        )
-
-    figure.update_layout(
-        margin={"l": 58, "r": 300, "t": 24, "b": 52},
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#ffffff",
-        hovermode="closest",
-        legend={
-            "title": {"text": "共同基金"},
-            "groupclick": "toggleitem",
-            "x": 1.02,
-            "y": 1,
-            "xanchor": "left",
-            "yanchor": "top",
-            "bgcolor": "#f8fafc",
-            "bordercolor": "#e2e8f0",
-            "borderwidth": 1,
-            "font": {"size": 11},
-        },
-        xaxis={
-            "title": "檢查日期",
-            "showgrid": True,
-            "gridcolor": "#eef2f7",
-            "rangeslider": {"visible": bool(history)},
-        },
-        yaxis={"title": "淨值", "showgrid": True, "gridcolor": "#eef2f7"},
-        font={"family": "Inter, system-ui, sans-serif", "color": "#172033"},
-    )
-    if not history:
-        figure.add_annotation(
-            text="上傳報表後即可建立基金歷史趨勢。",
-            x=0.5,
-            y=0.5,
-            xref="paper",
-            yref="paper",
-            showarrow=False,
-            font={"size": 16, "color": "#64748b"},
-        )
-        figure.update_xaxes(visible=False)
-        figure.update_yaxes(visible=False)
-    return figure
 
 
 def make_table(
@@ -221,7 +149,7 @@ app.layout = html.Div(
                         dcc.Link("上傳", href="/", id="upload-nav-link"),
                         dcc.Link("單日資料", href="/daily", id="daily-nav-link"),
                         dcc.Link(
-                            "歷史趨勢", href="/history", id="history-nav-link"
+                            "歷史資料", href="/history", id="history-nav-link"
                         ),
                     ],
                 ),
@@ -248,7 +176,7 @@ def render_page(pathname: str | None):
             "",
         )
     if pathname == "/history":
-        return history.layout(load_nav_history(), make_history_figure), "", "", "active"
+        return history.layout(load_holdings_history()), "", "", "active"
     return upload.layout(), "active", "", ""
 
 
@@ -300,6 +228,40 @@ def update_daily_visualization(
 ):
     return daily.make_visualization(
         load_holdings_by_date(report_date), mode, selection, metric
+    )
+
+
+@app.callback(
+    Output("history-selection-label", "children"),
+    Output("history-selection-dropdown", "options"),
+    Output("history-selection-dropdown", "value"),
+    Output("history-metric-dropdown", "options"),
+    Output("history-metric-dropdown", "value"),
+    Input("history-view-mode", "value"),
+    Input("history-start-date", "date"),
+    Input("history-end-date", "date"),
+    State("history-selection-dropdown", "value"),
+    State("history-metric-dropdown", "value"),
+)
+def update_history_controls(mode, start, end, selection, metric):
+    return history.resolve_controls(
+        load_holdings_history(), mode, start, end, selection, metric
+    )
+
+
+@app.callback(
+    Output("history-chart", "figure"),
+    Output("history-chart-title", "children"),
+    Output("history-chart-subtitle", "children"),
+    Input("history-view-mode", "value"),
+    Input("history-selection-dropdown", "value"),
+    Input("history-metric-dropdown", "value"),
+    Input("history-start-date", "date"),
+    Input("history-end-date", "date"),
+)
+def update_history_figure(mode, selection, metric, start, end):
+    return history.make_figure(
+        load_holdings_history(), mode, selection, metric, start, end
     )
 
 

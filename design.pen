@@ -5568,7 +5568,7 @@
       "id": "E5AtjB",
       "x": 3120,
       "y": 0,
-      "name": "Holdings Database — Mutual Fund History",
+      "name": "Holdings Database — Historical Data",
       "clip": true,
       "width": 1440,
       "height": 1024,
@@ -5627,150 +5627,196 @@
         },
         {
           "type": "frame",
-          "id": "J0nC3F",
+          "id": "c1XCdo",
           "x": 20,
-          "y": 104,
-          "name": "History application shell",
+          "y": 92,
+          "name": "Historical data application shell",
           "width": 1400,
+          "height": 912,
           "fill": "#FFFFFF00",
           "layout": "vertical",
-          "gap": 22,
+          "gap": 18,
           "children": [
             {
               "type": "frame",
-              "id": "mKF4H",
-              "name": "History hero",
+              "id": "R8uL9H",
+              "name": "Historical data hero",
               "width": "fill_container",
               "fill": "#FFFFFF00",
               "layout": "vertical",
-              "gap": 10,
+              "gap": 8,
               "children": [
                 {
                   "type": "text",
-                  "id": "YHLFp",
+                  "id": "aYFfb",
                   "name": "History eyebrow",
-                  "fill": "$accent",
-                  "content": "TIME SERIES",
-                  "fontFamily": "$font-ui",
+                  "fill": "#4F46E5",
+                  "content": "HISTORICAL EXPLORER",
+                  "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "800",
                   "letterSpacing": 1.92
                 },
                 {
                   "type": "text",
-                  "id": "IfoKo",
-                  "name": "History page title",
-                  "fill": "$text-primary",
-                  "content": "基金歷史趨勢",
+                  "id": "YByum",
+                  "name": "Historical data page title",
+                  "fill": "#172033",
+                  "content": "歷史資料",
                   "lineHeight": 1.05,
-                  "fontFamily": "$font-ui",
-                  "fontSize": 52,
+                  "fontFamily": "Inter",
+                  "fontSize": 48,
                   "fontWeight": "700",
-                  "letterSpacing": -2.08
+                  "letterSpacing": -1.92
                 },
                 {
                   "type": "text",
-                  "id": "JTh8S",
-                  "name": "History page subtitle",
-                  "fill": "$text-secondary",
-                  "content": "所有已上傳共同基金的歷史淨值走勢",
-                  "lineHeight": 1.6,
-                  "fontFamily": "$font-ui",
-                  "fontSize": 17,
+                  "id": "Kzj4e",
+                  "name": "Historical data subtitle",
+                  "fill": "#64748B",
+                  "content": "檢視基金與全委帳戶各項持倉資料的歷史趨勢",
+                  "lineHeight": 1.5,
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
                   "fontWeight": "normal"
                 }
               ]
             },
             {
               "type": "frame",
-              "id": "ynuXG",
-              "name": "History summary",
+              "id": "h8VXyZ",
+              "name": "Historical date range controls",
               "width": "fill_container",
               "height": 72,
-              "fill": "#FFFFFF00",
-              "gap": 12,
+              "fill": "#FFFFFF",
+              "cornerRadius": 14,
+              "stroke": "#E2E8F0",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "padding": [
+                12,
+                16
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
               "children": [
                 {
                   "type": "frame",
-                  "id": "p3xqQC",
-                  "name": "基金 summary",
-                  "width": 140,
-                  "height": 72,
-                  "fill": "#FFFFFFD1",
-                  "cornerRadius": 14,
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "strokeAlignment": "inner",
+                  "id": "XaGGf",
+                  "name": "Date range label",
+                  "fill": "#FFFFFF00",
                   "layout": "vertical",
-                  "gap": 3,
-                  "padding": [
-                    12,
-                    18
-                  ],
-                  "justifyContent": "center",
+                  "gap": 4,
                   "children": [
                     {
                       "type": "text",
-                      "id": "C5sObX",
-                      "name": "基金 value",
-                      "fill": "#27326B",
-                      "content": "244",
-                      "fontFamily": "$font-ui",
-                      "fontSize": 22,
+                      "id": "rrEuA",
+                      "name": "Date range heading",
+                      "fill": "#172033",
+                      "content": "資料期間",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
                       "fontWeight": "700"
                     },
                     {
                       "type": "text",
-                      "id": "jEh4E",
-                      "name": "基金 label",
-                      "fill": "$text-secondary",
-                      "content": "基金",
-                      "fontFamily": "$font-ui",
-                      "fontSize": 11,
-                      "fontWeight": "700",
-                      "letterSpacing": 0.88
+                      "id": "HR5DP",
+                      "name": "Date range helper",
+                      "fill": "#64748B",
+                      "content": "選擇起始與結束日期（含當日）",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
                 {
                   "type": "frame",
-                  "id": "fLbow",
-                  "name": "資料日期 summary",
-                  "width": 140,
-                  "height": 72,
-                  "fill": "#FFFFFFD1",
-                  "cornerRadius": 14,
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "strokeAlignment": "inner",
-                  "layout": "vertical",
-                  "gap": 3,
-                  "padding": [
-                    12,
-                    18
-                  ],
-                  "justifyContent": "center",
+                  "id": "Drwzk",
+                  "name": "Start and end date fields",
+                  "fill": "#FFFFFF00",
+                  "gap": 10,
+                  "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "TJU3k",
-                      "name": "資料日期 value",
-                      "fill": "#27326B",
-                      "content": "2",
-                      "fontFamily": "$font-ui",
-                      "fontSize": 22,
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "m3z2e",
+                      "name": "Start date field",
+                      "width": 220,
+                      "height": 42,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#A5B4FC",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "hDoMo",
+                          "name": "Start date calendar",
+                          "width": 17,
+                          "height": 17,
+                          "icon": "calendar-days",
+                          "library": "lucide",
+                          "fill": "#4F46E5"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Eqz8h",
+                          "name": "Start date value",
+                          "fill": "#172033",
+                          "content": "開始　2025 / 07 / 14",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "O3BN8",
-                      "name": "資料日期 label",
-                      "fill": "$text-secondary",
-                      "content": "資料日期",
-                      "fontFamily": "$font-ui",
-                      "fontSize": 11,
-                      "fontWeight": "700",
-                      "letterSpacing": 0.88
+                      "type": "frame",
+                      "id": "xcruK",
+                      "name": "End date field",
+                      "width": 220,
+                      "height": 42,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#A5B4FC",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "wTpQF",
+                          "name": "End date calendar",
+                          "width": 17,
+                          "height": 17,
+                          "icon": "calendar-days",
+                          "library": "lucide",
+                          "fill": "#4F46E5"
+                        },
+                        {
+                          "type": "text",
+                          "id": "rY4BC",
+                          "name": "End date value",
+                          "fill": "#172033",
+                          "content": "結束　2026 / 07 / 14",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -5778,14 +5824,236 @@
             },
             {
               "type": "frame",
-              "id": "l6i2z",
-              "name": "Historical NAV chart card",
+              "id": "Bf6pC",
+              "name": "Historical data view controls",
+              "width": "fill_container",
+              "height": 72,
+              "fill": "#FFFFFF",
+              "cornerRadius": 14,
+              "stroke": "#E2E8F0",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "padding": [
+                12,
+                16
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "atMGR",
+                  "name": "View mode radio group",
+                  "fill": "#FFFFFF00",
+                  "gap": 20,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "FntEK",
+                      "name": "以標的檢視 radio",
+                      "fill": "#FFFFFF00",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "rkLeP",
+                          "name": "以標的檢視 radio indicator",
+                          "fill": "#4F46E5",
+                          "width": 18,
+                          "height": 18,
+                          "stroke": "#4F46E5",
+                          "strokeWidth": 5,
+                          "strokeAlignment": "inner"
+                        },
+                        {
+                          "type": "text",
+                          "id": "aPaCd",
+                          "name": "以標的檢視 label",
+                          "fill": "#27326B",
+                          "content": "以標的檢視",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GRsUG",
+                      "name": "以帳戶檢視 radio",
+                      "fill": "#FFFFFF00",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "LX1Mf",
+                          "name": "以帳戶檢視 radio indicator",
+                          "fill": "#FFFFFF",
+                          "width": 18,
+                          "height": 18,
+                          "stroke": "#94A3B8",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner"
+                        },
+                        {
+                          "type": "text",
+                          "id": "jBGSC",
+                          "name": "以帳戶檢視 label",
+                          "fill": "#64748B",
+                          "content": "以帳戶檢視",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Q5I8ie",
+                  "name": "Historical dropdown menus",
+                  "fill": "#FFFFFF00",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "vy1GJ",
+                      "name": "Entity dropdown",
+                      "width": 250,
+                      "height": 46,
+                      "fill": "#F8FAFC",
+                      "cornerRadius": 9,
+                      "stroke": "#CBD5E1",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Uz8Bu",
+                          "name": "Entity dropdown text",
+                          "fill": "#FFFFFF00",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "lh80B",
+                              "name": "Entity dropdown label",
+                              "fill": "#64748B",
+                              "content": "標的",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "PXVWL",
+                              "name": "Entity dropdown value",
+                              "fill": "#172033",
+                              "content": "台積電",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "G9iGH7",
+                          "name": "Entity dropdown chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "#64748B"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WbOKv",
+                      "name": "Metric dropdown",
+                      "width": 250,
+                      "height": 46,
+                      "fill": "#F8FAFC",
+                      "cornerRadius": 9,
+                      "stroke": "#CBD5E1",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "aTKaN",
+                          "name": "Metric dropdown text",
+                          "fill": "#FFFFFF00",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "o6FCIF",
+                              "name": "Metric dropdown label",
+                              "fill": "#64748B",
+                              "content": "指標",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "lMcRQ",
+                              "name": "Metric dropdown value",
+                              "fill": "#172033",
+                              "content": "標的幣別市值",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "cSzrE",
+                          "name": "Metric dropdown chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "#64748B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "AEolp",
+              "name": "Historical trend chart card",
               "clip": true,
               "width": "fill_container",
-              "height": 620,
-              "fill": "$surface",
+              "height": 572,
+              "fill": "#FFFFFF",
               "cornerRadius": 18,
-              "stroke": "$border",
+              "stroke": "#E2E8F0",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
               "effect": {
@@ -5802,13 +6070,13 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "X0xTW",
-                  "name": "Chart header",
+                  "id": "EDQBK",
+                  "name": "Trend chart header",
                   "width": "fill_container",
-                  "height": 74,
+                  "height": 70,
                   "fill": "#FFFFFF",
                   "padding": [
-                    16,
+                    14,
                     20
                   ],
                   "justifyContent": "space_between",
@@ -5816,29 +6084,29 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "EaAMi",
-                      "name": "Chart heading",
+                      "id": "aVigt",
+                      "name": "Trend chart heading",
                       "fill": "#FFFFFF00",
                       "layout": "vertical",
                       "gap": 4,
                       "children": [
                         {
                           "type": "text",
-                          "id": "WZQso",
-                          "name": "Chart title",
-                          "fill": "$text-primary",
-                          "content": "共同基金淨值",
-                          "fontFamily": "$font-ui",
+                          "id": "ZYq73",
+                          "name": "Trend chart title",
+                          "fill": "#172033",
+                          "content": "台積電・標的幣別市值",
+                          "fontFamily": "Inter",
                           "fontSize": 18,
                           "fontWeight": "700"
                         },
                         {
                           "type": "text",
-                          "id": "y0xKN",
-                          "name": "Chart helper",
-                          "fill": "$text-secondary",
-                          "content": "每條線代表一個 ISIN；跨帳戶的同日資料已合併",
-                          "fontFamily": "$font-ui",
+                          "id": "vrncD",
+                          "name": "Trend chart subtitle",
+                          "fill": "#64748B",
+                          "content": "總計與所有帳戶組成趨勢",
+                          "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "normal"
                         }
@@ -5846,10 +6114,10 @@
                     },
                     {
                       "type": "frame",
-                      "id": "nFZcd",
-                      "name": "Chart date range",
+                      "id": "xTF53",
+                      "name": "Inclusive date range badge",
                       "height": 36,
-                      "fill": "$accent-soft",
+                      "fill": "#EEF2FF",
                       "cornerRadius": 9,
                       "gap": 8,
                       "padding": [
@@ -5860,21 +6128,21 @@
                       "children": [
                         {
                           "type": "icon",
-                          "id": "E6d2aQ",
-                          "name": "Date range icon",
+                          "id": "Jv2Ua",
+                          "name": "Range calendar icon",
                           "width": 16,
                           "height": 16,
                           "icon": "calendar-range",
                           "library": "lucide",
-                          "fill": "$accent"
+                          "fill": "#4F46E5"
                         },
                         {
                           "type": "text",
-                          "id": "RbGRw",
-                          "name": "Date range label",
-                          "fill": "#3730A3",
-                          "content": "2026 / 07 / 08 — 07 / 09",
-                          "fontFamily": "$font-data",
+                          "id": "q1AqhA",
+                          "name": "Range badge value",
+                          "fill": "#27326B",
+                          "content": "2025/07/14 — 2026/07/14",
+                          "fontFamily": "Geist Mono",
                           "fontSize": 12,
                           "fontWeight": "600"
                         }
@@ -5884,12 +6152,12 @@
                 },
                 {
                   "type": "frame",
-                  "id": "SwE6o",
-                  "name": "Chart body",
+                  "id": "OzfYO",
+                  "name": "Trend chart body",
                   "width": "fill_container",
                   "height": "fill_container",
                   "fill": "#FFFFFF",
-                  "stroke": "$border",
+                  "stroke": "#E2E8F0",
                   "strokeWidth": {
                     "top": 1
                   },
@@ -5904,8 +6172,8 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "dR9hp",
-                      "name": "NAV line plot",
+                      "id": "rgcHu",
+                      "name": "Aggregate and component trend plot",
                       "clip": true,
                       "width": "fill_container",
                       "height": "fill_container",
@@ -5913,306 +6181,272 @@
                       "layout": "none",
                       "children": [
                         {
-                          "type": "path",
-                          "id": "W0fImF",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Plot grid",
-                          "geometry": "M55 20h965m-965 100h965m-965 100h965m-965 100h965m-965 100h965m-965-400v400m241-400v400m241-400v400m241-400v400m242-400v400",
-                          "viewBox": [
-                            0,
-                            0,
-                            1020,
-                            440
-                          ],
-                          "fill": "#FFFFFF00",
-                          "width": 1020,
-                          "height": 440,
+                          "type": "line",
+                          "id": "kC7Bd",
+                          "x": 54,
+                          "y": 34,
+                          "name": "Horizontal grid line",
+                          "width": 940,
+                          "height": 0,
+                          "stroke": "#E2E8F0",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "line",
+                          "id": "S4xqzp",
+                          "x": 54,
+                          "y": 116,
+                          "name": "Horizontal grid line",
+                          "width": 940,
+                          "height": 0,
+                          "stroke": "#E2E8F0",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "line",
+                          "id": "jtfde",
+                          "x": 54,
+                          "y": 198,
+                          "name": "Horizontal grid line",
+                          "width": 940,
+                          "height": 0,
+                          "stroke": "#E2E8F0",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "line",
+                          "id": "k3BpMW",
+                          "x": 54,
+                          "y": 280,
+                          "name": "Horizontal grid line",
+                          "width": 940,
+                          "height": 0,
+                          "stroke": "#E2E8F0",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "line",
+                          "id": "HZBhQ",
+                          "x": 54,
+                          "y": 362,
+                          "name": "Horizontal grid line",
+                          "width": 940,
+                          "height": 0,
                           "stroke": "#E2E8F0",
                           "strokeWidth": 1
                         },
                         {
                           "type": "text",
-                          "id": "A0AY4W",
-                          "x": 10,
-                          "y": 12,
-                          "name": "Y tick 200",
-                          "fill": "$text-secondary",
-                          "content": "200",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
+                          "id": "Sa2US",
+                          "x": 0,
+                          "y": 26,
+                          "name": "Y axis 1.8 億",
+                          "fill": "#94A3B8",
+                          "content": "1.8 億",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
                           "fontWeight": "normal"
                         },
                         {
                           "type": "text",
-                          "id": "SYpWP",
-                          "x": 10,
-                          "y": 112,
-                          "name": "Y tick 150",
-                          "fill": "$text-secondary",
-                          "content": "150",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
+                          "id": "XmLbU",
+                          "x": 0,
+                          "y": 108,
+                          "name": "Y axis 1.4 億",
+                          "fill": "#94A3B8",
+                          "content": "1.4 億",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
                           "fontWeight": "normal"
                         },
                         {
                           "type": "text",
-                          "id": "iFgq7",
-                          "x": 10,
-                          "y": 212,
-                          "name": "Y tick 100",
-                          "fill": "$text-secondary",
-                          "content": "100",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
+                          "id": "lwOcX",
+                          "x": 0,
+                          "y": 190,
+                          "name": "Y axis 1.0 億",
+                          "fill": "#94A3B8",
+                          "content": "1.0 億",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
                           "fontWeight": "normal"
                         },
                         {
                           "type": "text",
-                          "id": "fc86G",
-                          "x": 17,
-                          "y": 312,
-                          "name": "Y tick 50",
-                          "fill": "$text-secondary",
-                          "content": "50",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
+                          "id": "X0xnT",
+                          "x": 0,
+                          "y": 272,
+                          "name": "Y axis 0.6 億",
+                          "fill": "#94A3B8",
+                          "content": "0.6 億",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
                           "fontWeight": "normal"
                         },
                         {
                           "type": "text",
-                          "id": "oKRjc",
-                          "x": 24,
-                          "y": 412,
-                          "name": "Y tick 0",
-                          "fill": "$text-secondary",
-                          "content": "0",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "text",
-                          "id": "qK8QW",
-                          "x": 55,
-                          "y": 444,
-                          "name": "X tick Jul 08",
-                          "fill": "$text-secondary",
-                          "content": "Jul 08",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "text",
-                          "id": "xyoU0",
-                          "x": 285,
-                          "y": 444,
-                          "name": "X tick noon",
-                          "fill": "$text-secondary",
-                          "content": "12:00",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "text",
-                          "id": "vePQo",
-                          "x": 520,
-                          "y": 444,
-                          "name": "X tick Jul 09",
-                          "fill": "$text-secondary",
-                          "content": "Jul 09",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "text",
-                          "id": "baSe6",
-                          "x": 766,
-                          "y": 444,
-                          "name": "X tick noon second",
-                          "fill": "$text-secondary",
-                          "content": "12:00",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "text",
-                          "id": "Y9lJ1E",
-                          "x": 995,
-                          "y": 444,
-                          "name": "X tick end",
-                          "fill": "$text-secondary",
-                          "content": "End",
-                          "fontFamily": "$font-data",
-                          "fontSize": 10,
+                          "id": "EEWxF",
+                          "x": 0,
+                          "y": 354,
+                          "name": "Y axis 0.2 億",
+                          "fill": "#94A3B8",
+                          "content": "0.2 億",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
                           "fontWeight": "normal"
                         },
                         {
                           "type": "path",
-                          "id": "XZ3cA",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Fund series — AB American Growth",
-                          "geometry": "M55 336c115-10 160-61 241-54 94 9 149-32 241-18 98 13 148-70 241-56 96 14 152-44 242-56",
+                          "id": "H89tz",
+                          "x": 54,
+                          "y": 42,
+                          "name": "Total aggregate trend line",
+                          "geometry": "M0 245c90-35 150-13 230-71 90-64 170-19 260-76 100-64 180-12 270-48 80-32 140-8 180-42",
                           "viewBox": [
                             0,
                             0,
-                            1020,
-                            440
+                            940,
+                            292
                           ],
                           "fill": "#FFFFFF00",
-                          "width": 1020,
-                          "height": 440,
+                          "width": 940,
+                          "height": 292,
                           "stroke": "#4F46E5",
-                          "strokeWidth": 3,
+                          "strokeWidth": 4,
                           "strokeLinejoin": "round",
                           "strokeLinecap": "round"
                         },
                         {
                           "type": "path",
-                          "id": "dzkgE",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Fund series — Global Value",
-                          "geometry": "M55 252c100-6 150-34 241-26 94 8 150-33 241-24 95 9 150-26 241-18 94 8 155-60 242-48",
+                          "id": "H8cMP",
+                          "x": 54,
+                          "y": 92,
+                          "name": "Account A component trend",
+                          "geometry": "M0 212c110-14 180-2 260-52 90-40 170-20 250-68 110-40 210-22 310-58 60-16 100-9 120-22",
                           "viewBox": [
                             0,
                             0,
-                            1020,
-                            440
+                            940,
+                            250
                           ],
                           "fill": "#FFFFFF00",
-                          "width": 1020,
-                          "height": 440,
-                          "stroke": "#0891B2",
-                          "strokeWidth": 3,
-                          "strokeLinejoin": "round",
+                          "width": 940,
+                          "height": 250,
+                          "stroke": "#22C55E",
+                          "strokeWidth": 2,
                           "strokeLinecap": "round"
                         },
                         {
                           "type": "path",
-                          "id": "kKFD3",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Fund series — Emerging Markets",
-                          "geometry": "M55 382c105-10 155-38 241-30 92 8 158-28 241-22 95 7 153-36 241-26 94 10 154-38 242-26",
+                          "id": "fBjlk",
+                          "x": 54,
+                          "y": 132,
+                          "name": "Account B component trend",
+                          "geometry": "M0 190c100-20 180-5 260-45 90-40 180-15 270-63 110-32 200-20 290-54 55-14 95-8 120-22",
                           "viewBox": [
                             0,
                             0,
-                            1020,
-                            440
+                            940,
+                            222
                           ],
                           "fill": "#FFFFFF00",
-                          "width": 1020,
-                          "height": 440,
+                          "width": 940,
+                          "height": 222,
                           "stroke": "#F59E0B",
-                          "strokeWidth": 3,
-                          "strokeLinejoin": "round",
+                          "strokeWidth": 2,
                           "strokeLinecap": "round"
                         },
                         {
                           "type": "path",
-                          "id": "C5IWyY",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Fund series — Global High Yield",
-                          "geometry": "M55 292c97 12 155-6 241 4 92 10 152-26 241-16 93 10 151-26 241-18 94 8 158-24 242-18",
+                          "id": "X8XBi",
+                          "x": 54,
+                          "y": 174,
+                          "name": "Account C component trend",
+                          "geometry": "M0 155c90-7 180 5 270-30 100-33 180-17 280-55 110-28 200-20 300-48 50-12 75-8 90-18",
                           "viewBox": [
                             0,
                             0,
-                            1020,
-                            440
+                            940,
+                            180
                           ],
                           "fill": "#FFFFFF00",
-                          "width": 1020,
-                          "height": 440,
-                          "stroke": "#DB2777",
-                          "strokeWidth": 3,
-                          "strokeLinejoin": "round",
+                          "width": 940,
+                          "height": 180,
+                          "stroke": "#EC4899",
+                          "strokeWidth": 2,
                           "strokeLinecap": "round"
                         },
                         {
-                          "type": "path",
-                          "id": "jvpBn",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Fund series — Asia Pacific Multi Asset",
-                          "geometry": "M55 178c95 12 155-14 241-4 91 11 155-26 241-16 95 11 151-32 241-16 96 17 152-44 242-30",
-                          "viewBox": [
-                            0,
-                            0,
-                            1020,
-                            440
-                          ],
-                          "fill": "#FFFFFF00",
-                          "width": 1020,
-                          "height": 440,
-                          "stroke": "#16A34A",
-                          "strokeWidth": 3,
-                          "strokeLinejoin": "round",
-                          "strokeLinecap": "round"
+                          "type": "text",
+                          "id": "cSHk3",
+                          "x": 54,
+                          "y": 382,
+                          "name": "X axis 2025/07",
+                          "fill": "#94A3B8",
+                          "content": "2025/07",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
-                          "type": "rectangle",
-                          "cornerRadius": 4,
-                          "id": "LbF11",
-                          "x": 55,
-                          "y": 482,
-                          "name": "Range slider track",
-                          "fill": "$accent-soft",
-                          "width": 965,
-                          "height": 8
+                          "type": "text",
+                          "id": "LzBeX",
+                          "x": 286,
+                          "y": 382,
+                          "name": "X axis 2025/10",
+                          "fill": "#94A3B8",
+                          "content": "2025/10",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
-                          "type": "rectangle",
-                          "cornerRadius": 4,
-                          "id": "nwnsL",
-                          "x": 320,
-                          "y": 482,
-                          "name": "Range slider selection",
-                          "fill": "#A5B4FC",
-                          "width": 470,
-                          "height": 8
+                          "type": "text",
+                          "id": "OxJu1",
+                          "x": 520,
+                          "y": 382,
+                          "name": "X axis 2026/01",
+                          "fill": "#94A3B8",
+                          "content": "2026/01",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
-                          "type": "ellipse",
-                          "id": "zeZse",
-                          "x": 314,
-                          "y": 476,
-                          "name": "Range slider start handle",
-                          "fill": "#FFFFFF",
-                          "width": 20,
-                          "height": 20,
-                          "stroke": "$accent",
-                          "strokeWidth": 2
+                          "type": "text",
+                          "id": "XIdc5",
+                          "x": 754,
+                          "y": 382,
+                          "name": "X axis 2026/04",
+                          "fill": "#94A3B8",
+                          "content": "2026/04",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
-                          "type": "ellipse",
-                          "id": "WUZmq",
-                          "x": 780,
-                          "y": 476,
-                          "name": "Range slider end handle",
-                          "fill": "#FFFFFF",
-                          "width": 20,
-                          "height": 20,
-                          "stroke": "$accent",
-                          "strokeWidth": 2
+                          "type": "text",
+                          "id": "OG20Y",
+                          "x": 948,
+                          "y": 382,
+                          "name": "X axis 2026/07",
+                          "fill": "#94A3B8",
+                          "content": "2026/07",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "D5dkV",
-                      "name": "Mutual fund legend",
-                      "width": 292,
+                      "id": "Unhbc",
+                      "name": "All series legend",
+                      "width": 280,
                       "height": "fill_container",
                       "fill": "#F8FAFC",
                       "cornerRadius": 12,
-                      "stroke": "$border",
+                      "stroke": "#E2E8F0",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
                       "layout": "vertical",
@@ -6221,335 +6455,165 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "aC0Hj",
-                          "name": "Legend title",
-                          "fill": "$text-primary",
-                          "content": "共同基金",
-                          "fontFamily": "$font-ui",
-                          "fontSize": 14,
+                          "id": "ZFlkp",
+                          "name": "Legend heading",
+                          "fill": "#172033",
+                          "content": "資料序列",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
                           "fontWeight": "700"
                         },
                         {
-                          "type": "text",
-                          "id": "amu0O",
-                          "name": "Legend count",
-                          "fill": "$text-secondary",
-                          "content": "顯示 5 / 244 條趨勢",
-                          "fontFamily": "$font-ui",
-                          "fontSize": 11,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "rectangle",
-                          "id": "u1R5K",
-                          "name": "Legend divider",
-                          "fill": "$border",
-                          "width": "fill_container",
-                          "height": 1
-                        },
-                        {
                           "type": "frame",
-                          "id": "X4BhE",
-                          "name": "Legend item / AB American Growth",
-                          "width": "fill_container",
+                          "id": "n1xazt",
+                          "name": "總計 legend item",
                           "fill": "#FFFFFF00",
                           "gap": 10,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "ellipse",
-                              "id": "bO5uw",
-                              "name": "AB American Growth color",
+                              "type": "rectangle",
+                              "cornerRadius": 2,
+                              "id": "WO3bH",
+                              "name": "總計 swatch",
                               "fill": "#4F46E5",
-                              "width": 10,
-                              "height": 10
+                              "width": 22,
+                              "height": 4
                             },
-                            {
-                              "type": "frame",
-                              "id": "DAyy6",
-                              "name": "AB American Growth labels",
-                              "width": "fill_container",
-                              "fill": "#FFFFFF00",
-                              "layout": "vertical",
-                              "gap": 2,
-                              "children": [
-                                {
-                                  "type": "text",
-                                  "id": "A9j2bk",
-                                  "name": "AB American Growth title",
-                                  "fill": "$text-primary",
-                                  "textGrowth": "fixed-width",
-                                  "width": "fill_container",
-                                  "content": "AB American Growth",
-                                  "fontFamily": "$font-ui",
-                                  "fontSize": 12,
-                                  "fontWeight": "600"
-                                },
-                                {
-                                  "type": "text",
-                                  "id": "t7y4a",
-                                  "name": "AB American Growth ISIN",
-                                  "fill": "$text-secondary",
-                                  "content": "LU0130376550",
-                                  "fontFamily": "$font-data",
-                                  "fontSize": 10,
-                                  "fontWeight": "normal"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "JWKOt",
-                          "name": "Legend item / Global Value Portfolio",
-                          "width": "fill_container",
-                          "fill": "#FFFFFF00",
-                          "gap": 10,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "ellipse",
-                              "id": "WAxLx",
-                              "name": "Global Value Portfolio color",
-                              "fill": "#0891B2",
-                              "width": 10,
-                              "height": 10
-                            },
-                            {
-                              "type": "frame",
-                              "id": "Cs0fx",
-                              "name": "Global Value Portfolio labels",
-                              "width": "fill_container",
-                              "fill": "#FFFFFF00",
-                              "layout": "vertical",
-                              "gap": 2,
-                              "children": [
-                                {
-                                  "type": "text",
-                                  "id": "pX9Qi",
-                                  "name": "Global Value Portfolio title",
-                                  "fill": "$text-primary",
-                                  "textGrowth": "fixed-width",
-                                  "width": "fill_container",
-                                  "content": "Global Value Portfolio",
-                                  "fontFamily": "$font-ui",
-                                  "fontSize": 12,
-                                  "fontWeight": "600"
-                                },
-                                {
-                                  "type": "text",
-                                  "id": "vJK2Y",
-                                  "name": "Global Value Portfolio ISIN",
-                                  "fill": "$text-secondary",
-                                  "content": "LU0206942384",
-                                  "fontFamily": "$font-data",
-                                  "fontSize": 10,
-                                  "fontWeight": "normal"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "SH1Cb",
-                          "name": "Legend item / Emerging Markets Value",
-                          "width": "fill_container",
-                          "fill": "#FFFFFF00",
-                          "gap": 10,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "ellipse",
-                              "id": "EWOeC",
-                              "name": "Emerging Markets Value color",
-                              "fill": "#F59E0B",
-                              "width": 10,
-                              "height": 10
-                            },
-                            {
-                              "type": "frame",
-                              "id": "w8lwC",
-                              "name": "Emerging Markets Value labels",
-                              "width": "fill_container",
-                              "fill": "#FFFFFF00",
-                              "layout": "vertical",
-                              "gap": 2,
-                              "children": [
-                                {
-                                  "type": "text",
-                                  "id": "ZlSCz",
-                                  "name": "Emerging Markets Value title",
-                                  "fill": "$text-primary",
-                                  "textGrowth": "fixed-width",
-                                  "width": "fill_container",
-                                  "content": "Emerging Markets Value",
-                                  "fontFamily": "$font-ui",
-                                  "fontSize": 12,
-                                  "fontWeight": "600"
-                                },
-                                {
-                                  "type": "text",
-                                  "id": "f9UqEa",
-                                  "name": "Emerging Markets Value ISIN",
-                                  "fill": "$text-secondary",
-                                  "content": "LU0145423298",
-                                  "fontFamily": "$font-data",
-                                  "fontSize": 10,
-                                  "fontWeight": "normal"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "SZyR1",
-                          "name": "Legend item / Global High Yield",
-                          "width": "fill_container",
-                          "fill": "#FFFFFF00",
-                          "gap": 10,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "ellipse",
-                              "id": "Yz1Eo",
-                              "name": "Global High Yield color",
-                              "fill": "#DB2777",
-                              "width": 10,
-                              "height": 10
-                            },
-                            {
-                              "type": "frame",
-                              "id": "WOGjs",
-                              "name": "Global High Yield labels",
-                              "width": "fill_container",
-                              "fill": "#FFFFFF00",
-                              "layout": "vertical",
-                              "gap": 2,
-                              "children": [
-                                {
-                                  "type": "text",
-                                  "id": "m9py7",
-                                  "name": "Global High Yield title",
-                                  "fill": "$text-primary",
-                                  "textGrowth": "fixed-width",
-                                  "width": "fill_container",
-                                  "content": "Global High Yield",
-                                  "fontFamily": "$font-ui",
-                                  "fontSize": 12,
-                                  "fontWeight": "600"
-                                },
-                                {
-                                  "type": "text",
-                                  "id": "nmctR",
-                                  "name": "Global High Yield ISIN",
-                                  "fill": "$text-secondary",
-                                  "content": "LU0264315572",
-                                  "fontFamily": "$font-data",
-                                  "fontSize": 10,
-                                  "fontWeight": "normal"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "f4kC89",
-                          "name": "Legend item / Asia Pacific Multi-Asset",
-                          "width": "fill_container",
-                          "fill": "#FFFFFF00",
-                          "gap": 10,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "ellipse",
-                              "id": "zFaLy",
-                              "name": "Asia Pacific Multi-Asset color",
-                              "fill": "#16A34A",
-                              "width": 10,
-                              "height": 10
-                            },
-                            {
-                              "type": "frame",
-                              "id": "I7P69D",
-                              "name": "Asia Pacific Multi-Asset labels",
-                              "width": "fill_container",
-                              "fill": "#FFFFFF00",
-                              "layout": "vertical",
-                              "gap": 2,
-                              "children": [
-                                {
-                                  "type": "text",
-                                  "id": "QYJpv",
-                                  "name": "Asia Pacific Multi-Asset title",
-                                  "fill": "$text-primary",
-                                  "textGrowth": "fixed-width",
-                                  "width": "fill_container",
-                                  "content": "Asia Pacific Multi-Asset",
-                                  "fontFamily": "$font-ui",
-                                  "fontSize": 12,
-                                  "fontWeight": "600"
-                                },
-                                {
-                                  "type": "text",
-                                  "id": "c0aTC",
-                                  "name": "Asia Pacific Multi-Asset ISIN",
-                                  "fill": "$text-secondary",
-                                  "content": "TW000T1812C0",
-                                  "fontFamily": "$font-data",
-                                  "fontSize": 10,
-                                  "fontWeight": "normal"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "rectangle",
-                          "id": "kX9lg",
-                          "name": "Legend footer divider",
-                          "fill": "$border",
-                          "width": "fill_container",
-                          "height": 1
-                        },
-                        {
-                          "type": "frame",
-                          "id": "KHr1T",
-                          "name": "Additional fund count",
-                          "width": "fill_container",
-                          "height": 34,
-                          "fill": "$accent-soft",
-                          "cornerRadius": 8,
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
                             {
                               "type": "text",
-                              "id": "rEzkp",
-                              "name": "Additional fund label",
-                              "fill": "$accent",
-                              "content": "+ 239 個基金",
-                              "fontFamily": "$font-ui",
-                              "fontSize": 12,
+                              "id": "sBQMw",
+                              "name": "總計 legend label",
+                              "fill": "#27326B",
+                              "content": "總計",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
                               "fontWeight": "700"
                             }
                           ]
                         },
                         {
-                          "type": "text",
-                          "id": "nphXI",
-                          "name": "Legend interaction hint",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
+                          "type": "frame",
+                          "id": "zy2Mj",
+                          "name": "全委帳戶 A legend item",
+                          "fill": "#FFFFFF00",
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2,
+                              "id": "ZoVB7",
+                              "name": "全委帳戶 A swatch",
+                              "fill": "#22C55E",
+                              "width": 22,
+                              "height": 2
+                            },
+                            {
+                              "type": "text",
+                              "id": "sKG3N",
+                              "name": "全委帳戶 A legend label",
+                              "fill": "#475569",
+                              "content": "全委帳戶 A",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uSCwR",
+                          "name": "全委帳戶 B legend item",
+                          "fill": "#FFFFFF00",
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2,
+                              "id": "gPivk",
+                              "name": "全委帳戶 B swatch",
+                              "fill": "#F59E0B",
+                              "width": 22,
+                              "height": 2
+                            },
+                            {
+                              "type": "text",
+                              "id": "MtfMT",
+                              "name": "全委帳戶 B legend label",
+                              "fill": "#475569",
+                              "content": "全委帳戶 B",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZP9Xo",
+                          "name": "全委帳戶 C legend item",
+                          "fill": "#FFFFFF00",
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2,
+                              "id": "b8OY8",
+                              "name": "全委帳戶 C swatch",
+                              "fill": "#EC4899",
+                              "width": 22,
+                              "height": 2
+                            },
+                            {
+                              "type": "text",
+                              "id": "Di3o5",
+                              "name": "全委帳戶 C legend label",
+                              "fill": "#475569",
+                              "content": "全委帳戶 C",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Mfcgq",
+                          "name": "Legend interaction note",
                           "width": "fill_container",
-                          "content": "點選圖例可顯示或隱藏個別趨勢",
-                          "lineHeight": 1.4,
-                          "fontFamily": "$font-ui",
-                          "fontSize": 10,
-                          "fontWeight": "normal"
+                          "fill": "#FFFFFF00",
+                          "gap": 8,
+                          "padding": [
+                            10,
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "doK06",
+                              "name": "Legend interaction icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "mouse-pointer-click",
+                              "library": "lucide",
+                              "fill": "#64748B"
+                            },
+                            {
+                              "type": "text",
+                              "id": "pgQ71",
+                              "name": "Legend interaction text",
+                              "fill": "#64748B",
+                              "content": "點選圖例可顯示或隱藏序列",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         }
                       ]
                     }

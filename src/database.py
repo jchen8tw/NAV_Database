@@ -1,7 +1,6 @@
 import sqlite3
 from datetime import date, datetime
 from pathlib import Path
-from statistics import median
 from typing import Any
 
 import polars as pl
@@ -164,40 +163,20 @@ def store_dataframe(df: pl.DataFrame, database_path: Path = DATABASE_PATH) -> in
     return int(total_rows[0])
 
 
-def load_nav_history(database_path: Path = DATABASE_PATH) -> list[dict[str, Any]]:
+def load_holdings_history(database_path: Path = DATABASE_PATH) -> pl.DataFrame:
+    """Return every stored holding observation using a stable history schema."""
+    columns = [DATE_COLUMN, *HOLDINGS_COLUMNS]
+    empty = pl.DataFrame(schema={column: pl.String for column in columns})
     if not holdings_table_is_ready(database_path):
-        return []
+        return empty
+    quoted_columns = ", ".join(quote_identifier(column) for column in columns)
     with sqlite3.connect(database_path) as connection:
         rows = connection.execute(
-            f'''SELECT {quote_identifier(DATE_COLUMN)}, {quote_identifier("ISIN")},
-                       {quote_identifier("標的名稱")},
-                       {quote_identifier("基金淨值/ETF收盤價")}
-                FROM {quote_identifier(TABLE_NAME)}
-                WHERE {quote_identifier("標的種類")} = '基金'
-                  AND {quote_identifier("基金淨值/ETF收盤價")} IS NOT NULL
-                ORDER BY {quote_identifier(DATE_COLUMN)}, {quote_identifier("ISIN")},
-                         {quote_identifier(ACCOUNT_CODE_COLUMN)}'''
+            f"SELECT {quoted_columns} FROM {quote_identifier(TABLE_NAME)} "
+            f"ORDER BY {quote_identifier(DATE_COLUMN)}, "
+            f"{quote_identifier('標的名稱')}, {quote_identifier(ACCOUNT_CODE_COLUMN)}"
         ).fetchall()
-
-    observations: dict[tuple[str, str], dict[str, Any]] = {}
-    for report_date, isin, fund_name, nav in rows:
-        group = observations.setdefault(
-            (str(report_date), str(isin)),
-            {"fund_names": [], "navs": []},
-        )
-        if fund_name is not None:
-            group["fund_names"].append(str(fund_name))
-        group["navs"].append(float(nav))
-
-    return [
-        {
-            "report_date": report_date,
-            "isin": isin,
-            "fund_name": max(group["fund_names"], default=""),
-            "nav": median(group["navs"]),
-        }
-        for (report_date, isin), group in observations.items()
-    ]
+    return pl.DataFrame(rows, schema=columns, orient="row") if rows else empty
 
 
 def holdings_table_is_ready(database_path: Path = DATABASE_PATH) -> bool:

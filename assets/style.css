@@ -457,78 +457,31 @@ h1 {
   margin-bottom: 22px;
 }
 
-.history-summary {
+.history-date-controls {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.history-summary > div {
-  display: flex;
-  min-width: 120px;
-  flex-direction: column;
-  gap: 3px;
-  padding: 14px 18px;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 16px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.82);
-}
-
-.history-summary strong {
-  color: #27326b;
-  font-size: 22px;
-}
-
-.history-summary span {
-  color: #64748b;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.chart-card {
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
   background: #fff;
-  box-shadow: 0 14px 40px rgba(30, 41, 59, 0.08);
 }
 
-.chart-header {
-  display: flex;
-  min-height: 74px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.chart-heading {
+.history-date-controls label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.chart-heading strong {
-  font-size: 18px;
-}
-
-.chart-heading span {
+  gap: 6px;
   color: #64748b;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.chart-date-range {
-  flex: 0 0 auto;
-  padding: 10px 12px;
-  border-radius: 9px;
-  color: #3730a3;
-  background: #eef2ff;
-  font-family: "Geist Mono", ui-monospace, monospace;
-  font-size: 12px;
-  font-weight: 600;
+.history-view-controls {
+  margin-top: 0;
+}
+
+.history-visualization-card {
+  margin-top: 14px;
 }
 
 .history-chart {
@@ -566,7 +519,7 @@ h1 {
   }
 
   .date-picker-panel,
-  .chart-header,
+  .history-date-controls,
   .daily-view-controls,
   .daily-chart-header {
     align-items: flex-start;
@@ -589,7 +542,4 @@ h1 {
     width: calc(100vw - 64px);
   }
 
-  .history-summary {
-    overflow-x: auto;
-  }
 }
