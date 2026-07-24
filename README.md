@@ -36,6 +36,8 @@ The dashboard includes:
 - Shared navigation between Upload, By Day, and History pages
 - A sortable, filterable, paginated data table
 
+> **Note：**國泰世華銀行 Excel 中的「檢查日期」會比實際資料日期晚一個工作天。也就是說，若檢查日期為 D 日，庫存、淨值等資料實際上是 D-1 個工作天的資料，並於 D 日進行檢查。
+
 ## 使用者輸入與輸出流程
 
 ```mermaid

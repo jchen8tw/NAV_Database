@@ -14,6 +14,13 @@ from src.database import (
 from src.pages import daily
 
 NAV_COLUMN = "基金淨值/ETF收盤價"
+REPRESENTATIVE_ONLY_METRICS = {NAV_COLUMN, ISSUE_SIZE_COLUMN}
+DATE_DISPLAY_FORMAT = "%Y/%m/%d"
+TRACE_HOVER_TEMPLATE = (
+    "<b>%{fullData.name}</b><br>"
+    f"%{{x|{DATE_DISPLAY_FORMAT}}}<br>"
+    "%{y:,.4f}<extra></extra>"
+)
 
 
 @dataclass(frozen=True)
@@ -28,9 +35,9 @@ METRICS = {
     daily.TARGET_MODE: {
         daily.UNITS_COLUMN: Metric("各專戶庫存單位數", "sum", "總計", 3),
         daily.TARGET_VALUE_COLUMN: Metric("各專戶持有市值(標的幣別)", "sum", "總計"),
-        NAV_COLUMN: Metric("基金淨值 / ETF 收盤價", "median", "代表值（中位數）", 4),
+        NAV_COLUMN: Metric("基金淨值 / ETF 收盤價", "median", "代表值（所有標的資料的中位數）", 4),
         ISSUE_SIZE_COLUMN: Metric(
-            "標的發行規模或流通股數", "median", "代表值（中位數）", 3
+            "標的發行規模或流通股數", "median", "代表值（所有標的資料的中位數）", 3
         ),
         ASSET_RATIO_COLUMN: Metric("佔標的資產或單位數比重(%)", "sum", "總計", 3),
     },
@@ -134,31 +141,34 @@ def make_figure(df, mode, selection, metric, start=None, end=None):
         if definition.reduction == "sum"
         else pl.col(metric).median()
     )
-    components = data.group_by([DATE_COLUMN, component_column]).agg(
-        reducer.alias("value")
-    )
     summary = data.group_by(DATE_COLUMN).agg(reducer.alias("value")).sort(DATE_COLUMN)
     figure = go.Figure()
-    for index, component in enumerate(
-        sorted(components[component_column].drop_nulls().cast(pl.String).unique())
+    if not (
+        mode == daily.TARGET_MODE and metric in REPRESENTATIVE_ONLY_METRICS
     ):
-        points = components.filter(
-            pl.col(component_column).cast(pl.String) == component
-        ).sort(DATE_COLUMN)
-        figure.add_trace(
-            go.Scatter(
-                x=points[DATE_COLUMN].to_list(),
-                y=points["value"].to_list(),
-                mode="lines+markers",
-                name=component,
-                line={
-                    "width": 1.7,
-                    "color": daily.CHART_COLORS[index % len(daily.CHART_COLORS)],
-                },
-                marker={"size": 5},
-                hovertemplate="<b>%{fullData.name}</b><br>%{x}<br>%{y:,.4f}<extra></extra>",
-            )
+        components = data.group_by([DATE_COLUMN, component_column]).agg(
+            reducer.alias("value")
         )
+        for index, component in enumerate(
+            sorted(components[component_column].drop_nulls().cast(pl.String).unique())
+        ):
+            points = components.filter(
+                pl.col(component_column).cast(pl.String) == component
+            ).sort(DATE_COLUMN)
+            figure.add_trace(
+                go.Scatter(
+                    x=points[DATE_COLUMN].to_list(),
+                    y=points["value"].to_list(),
+                    mode="lines+markers",
+                    name=component,
+                    line={
+                        "width": 1.7,
+                        "color": daily.CHART_COLORS[index % len(daily.CHART_COLORS)],
+                    },
+                    marker={"size": 5},
+                    hovertemplate=TRACE_HOVER_TEMPLATE,
+                )
+            )
     figure.add_trace(
         go.Scatter(
             x=summary[DATE_COLUMN].to_list(),
@@ -167,7 +177,7 @@ def make_figure(df, mode, selection, metric, start=None, end=None):
             name=definition.summary,
             line={"width": 4, "color": "#172033"},
             marker={"size": 7},
-            hovertemplate="<b>%{fullData.name}</b><br>%{x}<br>%{y:,.4f}<extra></extra>",
+            hovertemplate=TRACE_HOVER_TEMPLATE,
         )
     )
     figure = daily.style_figure(figure)
@@ -177,7 +187,11 @@ def make_figure(df, mode, selection, metric, start=None, end=None):
         legend={"orientation": "h", "y": 1.08, "x": 0, "groupclick": "toggleitem"},
     )
     figure.update_xaxes(
-        title="檢查日期", gridcolor="#eef2f7", rangeslider={"visible": True}
+        title="檢查日期",
+        gridcolor="#eef2f7",
+        tickformat=DATE_DISPLAY_FORMAT,
+        hoverformat=DATE_DISPLAY_FORMAT,
+        rangeslider={"visible": True},
     )
     figure.update_yaxes(title=definition.label, gridcolor="#eef2f7", zeroline=False)
     return figure, f"{selection} 歷史趨勢", definition.label

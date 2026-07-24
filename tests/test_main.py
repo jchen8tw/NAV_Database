@@ -1,12 +1,13 @@
 import base64
 import csv
-from io import StringIO
+from io import BytesIO, StringIO
 import sqlite3
 import tempfile
 import unittest
+import zipfile
 from datetime import date, datetime
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import polars as pl
 from dash import dash_table, html
@@ -111,6 +112,15 @@ class WorkbookParsingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "could not be decoded"):
             reader.parse_excel("data:application/octet-stream;base64,not-base64!")
 
+    def test_parse_excel_bytes_uses_workbook_bytes_directly(self):
+        worksheet = pl.DataFrame([["summary"]], orient="row")
+        with (
+            patch("src.reader.pl.read_excel", return_value=worksheet) as read_excel,
+            self.assertRaisesRegex(ValueError, "recognized holdings table"),
+        ):
+            reader.parse_excel_bytes(b"workbook")
+        self.assertEqual(read_excel.call_args.args[0].read(), b"workbook")
+
     def test_parse_supplied_legacy_workbook(self):
         contents = "data:application/vnd.ms-excel;base64," + base64.b64encode(
             (Path("sample") / "越權檢核115-07-08.xls").read_bytes()
@@ -162,6 +172,106 @@ class WorkbookParsingTests(unittest.TestCase):
             result = reader.parse_excel(contents)
         self.assertEqual(result["持有市值(帳戶幣別)"].item(), 2000.0)
         self.assertIsNone(result["持有市值(標的幣別)"].item())
+
+    def test_msg_extraction_selects_all_qualifying_zip_attachments(self):
+        cathay_zip = self._zip_bytes(
+            {
+                "DC029_20260626.xlsx": b"cathay",
+                "nested/DC030_20260626.xlsx": b"nested",
+                "ignore.txt": b"ignore",
+            }
+        )
+        dated_zip = self._zip_bytes(
+            {
+                "越權檢核115-7-8.xls": b"dated",
+                "DC029_20260626.xlsx": b"wrong family",
+            }
+        )
+        attachments = [
+            self._attachment("國壽越權報表_20260626.zip", cathay_zip),
+            self._attachment("20260708_reports.zip", dated_zip),
+            self._attachment("other.zip", cathay_zip),
+        ]
+        message = MagicMock()
+        message.__enter__.return_value.attachments = attachments
+        with patch("src.reader.extract_msg.openMsg", return_value=message) as open_msg:
+            results = reader.extract_msg_workbooks(b"message")
+
+        open_msg.assert_called_once_with(b"message")
+        self.assertEqual([result.contents for result in results], [b"cathay", b"dated"])
+        self.assertEqual(
+            [result.label for result in results],
+            [
+                "國壽越權報表_20260626.zip › DC029_20260626.xlsx",
+                "20260708_reports.zip › 越權檢核115-7-8.xls",
+            ],
+        )
+
+    def test_msg_extraction_reports_invalid_msg_missing_zip_and_corrupt_archive(self):
+        with patch("src.reader.extract_msg.openMsg", side_effect=OSError("bad data")):
+            with self.assertRaisesRegex(ValueError, "無法讀取 Outlook MSG"):
+                reader.extract_msg_workbooks(b"bad")
+
+        message = MagicMock()
+        message.__enter__.return_value.attachments = [
+            self._attachment("unrelated.zip", b"not a zip")
+        ]
+        with patch("src.reader.extract_msg.openMsg", return_value=message):
+            with self.assertRaisesRegex(ValueError, "找不到符合命名規則"):
+                reader.extract_msg_workbooks(b"message")
+
+        message.__enter__.return_value.attachments = [
+            self._attachment("國壽越權報表.zip", b"not a zip")
+        ]
+        with patch("src.reader.extract_msg.openMsg", return_value=message):
+            results = reader.extract_msg_workbooks(b"message")
+        self.assertIn("已損毀", results[0].error)
+
+    def test_archive_read_uses_password_and_reports_wrong_password(self):
+        info = MagicMock()
+        info.filename = "DC029_20260626.xlsx"
+        info.flag_bits = 0x800
+        info.is_dir.return_value = False
+        archive = MagicMock()
+        archive.__enter__.return_value.infolist.return_value = [info]
+        archive.__enter__.return_value.read.side_effect = RuntimeError(
+            "Bad password for file"
+        )
+        message = MagicMock()
+        message.__enter__.return_value.attachments = [
+            self._attachment("國壽越權報表.zip", b"archive")
+        ]
+        with (
+            patch("src.reader.extract_msg.openMsg", return_value=message),
+            patch("src.reader.zipfile.ZipFile", return_value=archive),
+        ):
+            results = reader.extract_msg_workbooks(b"message")
+        archive.__enter__.return_value.read.assert_called_once_with(
+            info, pwd=reader.MSG_ZIP_PASSWORD
+        )
+        self.assertIn("密碼不正確", results[0].error)
+
+    def test_cp950_zip_filename_recovery(self):
+        expected = "越權檢核115-7-8.xls"
+        info = MagicMock()
+        info.filename = expected.encode("cp950").decode("cp437")
+        info.flag_bits = 0
+        self.assertEqual(reader._decode_zip_filename(info), expected)
+
+    @staticmethod
+    def _zip_bytes(files):
+        output = BytesIO()
+        with zipfile.ZipFile(output, "w") as archive:
+            for filename, contents in files.items():
+                archive.writestr(filename, contents)
+        return output.getvalue()
+
+    @staticmethod
+    def _attachment(name, contents):
+        attachment = MagicMock()
+        attachment.getFilename.return_value = name
+        attachment.data = contents
+        return attachment
 
 
 class DataHelpersTests(unittest.TestCase):
@@ -364,9 +474,11 @@ class PresentationTests(unittest.TestCase):
         upload_copy = text_content(upload.layout())
         self.assertIn("投資組合資料庫", upload_copy)
         self.assertIn("請將保管銀行的越權報表上傳，支援世華銀行與中信銀行格式", upload_copy)
-        self.assertIn("將多個 Excel 檔案拖曳到這裡", upload_copy)
-        self.assertIn("或點擊選擇檔案（可一次選取多個）", upload_copy)
-        self.assertTrue(upload.layout().children[1].multiple)
+        self.assertIn("將 Excel 或 Outlook 訊息檔拖曳到這裡", upload_copy)
+        self.assertIn("或點擊選擇報表檔案（可一次選取多個）", upload_copy)
+        uploader = upload.layout().children[1]
+        self.assertTrue(uploader.multiple)
+        self.assertEqual(uploader.accept, ".xlsx,.xls,.msg")
 
         daily_copy = text_content(daily.layout([], lambda _: pl.DataFrame(), main.make_table))
         self.assertIn("單日的所有基金與全委帳戶的資料", daily_copy)
@@ -402,6 +514,11 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual([trace.name for trace in figure.data], ["Alpha", "Beta", "總計"])
         self.assertEqual(list(figure.data[-1].y), [30.0, 15.0])
         self.assertTrue(figure.layout.xaxis.rangeslider.visible)
+        self.assertEqual(figure.layout.xaxis.tickformat, "%Y/%m/%d")
+        self.assertEqual(figure.layout.xaxis.hoverformat, "%Y/%m/%d")
+        for trace in figure.data:
+            self.assertIn("%{x|%Y/%m/%d}", trace.hovertemplate)
+            self.assertNotIn("<br>%{x}<br>", trace.hovertemplate)
         empty, _, _ = history.make_figure(pl.DataFrame(), daily.TARGET_MODE, None, daily.TARGET_VALUE_COLUMN)
         self.assertEqual(len(empty.layout.annotations), 1)
         self.assertFalse(empty.layout.xaxis.visible)
@@ -413,20 +530,22 @@ class PresentationTests(unittest.TestCase):
         self.assertNotIn(history.NAV_COLUMN, history.METRICS[daily.ACCOUNT_MODE])
         self.assertNotIn(database.ISSUE_SIZE_COLUMN, history.METRICS[daily.ACCOUNT_MODE])
 
-        observations = pl.DataFrame({
-            database.DATE_COLUMN: ["2025-01-01", "2025-01-01"],
-            database.ACCOUNT_NAME_COLUMN: ["Alpha", "Beta"],
-            "標的名稱": ["Fund 1", "Fund 1"],
-            history.NAV_COLUMN: [10.0, 14.0],
-        })
-        figure, _, _ = history.make_figure(
-            observations, daily.TARGET_MODE, "Fund 1", history.NAV_COLUMN
-        )
-        self.assertEqual(
-            [trace.name for trace in figure.data],
-            ["Alpha", "Beta", "代表值（中位數）"],
-        )
-        self.assertEqual(list(figure.data[-1].y), [12.0])
+        for metric in (history.NAV_COLUMN, database.ISSUE_SIZE_COLUMN):
+            with self.subTest(metric=metric):
+                observations = pl.DataFrame({
+                    database.DATE_COLUMN: ["2025-01-01", "2025-01-01"],
+                    database.ACCOUNT_NAME_COLUMN: ["Alpha", "Beta"],
+                    "標的名稱": ["Fund 1", "Fund 1"],
+                    metric: [10.0, 14.0],
+                })
+                figure, _, _ = history.make_figure(
+                    observations, daily.TARGET_MODE, "Fund 1", metric
+                )
+                self.assertEqual(
+                    [trace.name for trace in figure.data],
+                    ["代表值（所有標的資料的中位數）"],
+                )
+                self.assertEqual(list(figure.data[0].y), [12.0])
 
     def test_history_controls_filter_range_and_reset_stale_values(self):
         observations = pl.DataFrame({
@@ -614,6 +733,49 @@ class PresentationTests(unittest.TestCase):
             ["完成", "失敗", "完成"],
         )
         self.assertEqual(result.children[1].page_size, 6)
+
+    def test_upload_callback_processes_msg_workbooks_independently(self):
+        frames = [
+            pl.DataFrame({database.DATE_COLUMN: ["2026-06-26"], "ISIN": ["F1"]}),
+            pl.DataFrame({database.DATE_COLUMN: ["2026-06-26"], "ISIN": ["F2"]}),
+        ]
+        reports = [
+            reader.ExtractedWorkbook(
+                "國壽越權報表.zip › DC029_20260626.xlsx", b"one"
+            ),
+            reader.ExtractedWorkbook(
+                "國壽越權報表.zip › DC030_20260626.xlsx", b"bad"
+            ),
+            reader.ExtractedWorkbook(
+                "國壽越權報表.zip › DC031_20260626.xlsx", b"two"
+            ),
+        ]
+        upload_data = "data:application/octet-stream;base64," + base64.b64encode(
+            b"message"
+        ).decode()
+        with (
+            patch("main.extract_msg_workbooks", return_value=reports),
+            patch(
+                "main.parse_excel_bytes",
+                side_effect=[frames[0], ValueError("bad workbook"), frames[1]],
+            ),
+            patch("main.store_dataframe", side_effect=[1, 2]) as store,
+        ):
+            result, class_name = main.show_uploaded_workbooks(
+                [upload_data], ["message.msg"]
+            )
+
+        self.assertEqual(class_name, "batch-status batch-status--mixed")
+        self.assertEqual(store.call_count, 2)
+        self.assertEqual(
+            [row["filename"] for row in result.children[1].data],
+            [
+                "message.msg › DC029_20260626.xlsx",
+                "message.msg › DC030_20260626.xlsx",
+                "message.msg › DC031_20260626.xlsx",
+            ],
+        )
+        self.assertIn("3 個報表檔案", " ".join(text_content(result)))
 
 
 

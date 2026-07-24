@@ -15,7 +15,13 @@ from src.database import (
     load_holdings_history,
     store_dataframe,
 )
-from src.reader import parse_excel
+from src.reader import (
+    ExtractedWorkbook,
+    decode_upload,
+    extract_msg_workbooks,
+    parse_excel,
+    parse_excel_bytes,
+)
 
 NUMERIC_COLUMNS = (
     "庫存單位數",
@@ -304,37 +310,68 @@ def show_uploaded_workbooks(
     imported_rows = 0
     for index, file_contents in enumerate(contents):
         filename = filenames[index] if index < len(filenames) else f"檔案 {index + 1}"
-        if Path(filename).suffix.lower() not in {".xlsx", ".xls"}:
+        suffix = Path(filename).suffix.lower()
+        if suffix not in {".xlsx", ".xls", ".msg"}:
             rows.append(
                 {
                     "filename": filename,
                     "status": "失敗",
-                    "detail": "不支援的格式；請上傳 .xlsx 或 .xls",
+                    "detail": "不支援的格式；請上傳 .xlsx、.xls 或 .msg",
                 }
             )
             continue
 
-        try:
-            df = parse_excel(file_contents)
-            store_dataframe(df)
-        except Exception as exc:
-            rows.append(
-                {"filename": filename, "status": "失敗", "detail": str(exc)}
-            )
-            continue
+        if suffix == ".msg":
+            try:
+                reports = extract_msg_workbooks(decode_upload(file_contents))
+            except Exception as exc:
+                reports = [ExtractedWorkbook(filename, error=str(exc))]
+        else:
+            reports = [ExtractedWorkbook(filename)]
 
-        completed += 1
-        imported_rows += df.height
-        rows.append(
-            {
-                "filename": filename,
-                "status": "完成",
-                "detail": (
-                    f"{df.height:,} 列 · {df.width:,} 欄 · "
-                    f"資料日期 {df.get_column(DATE_COLUMN).item(0)}"
-                ),
-            }
-        )
+        for report in reports:
+            if report.error:
+                report_label = (
+                    f"{filename} › {report.label}"
+                    if report.label != filename
+                    else filename
+                )
+                rows.append(
+                    {
+                        "filename": report_label,
+                        "status": "失敗",
+                        "detail": report.error,
+                    }
+                )
+                continue
+            label = (
+                filename
+                if suffix != ".msg"
+                else f"{filename} › {report.label.split(' › ', 1)[-1]}"
+            )
+            try:
+                df = (
+                    parse_excel(file_contents)
+                    if suffix != ".msg"
+                    else parse_excel_bytes(report.contents or b"")
+                )
+                store_dataframe(df)
+            except Exception as exc:
+                rows.append({"filename": label, "status": "失敗", "detail": str(exc)})
+                continue
+
+            completed += 1
+            imported_rows += df.height
+            rows.append(
+                {
+                    "filename": label,
+                    "status": "完成",
+                    "detail": (
+                        f"{df.height:,} 列 · {df.width:,} 欄 · "
+                        f"資料日期 {df.get_column(DATE_COLUMN).item(0)}"
+                    ),
+                }
+            )
 
     failed = len(rows) - completed
     status = html.Section(
@@ -343,7 +380,7 @@ def show_uploaded_workbooks(
                 [
                     html.Div(
                         [
-                            html.Strong(f"已處理 {len(rows)} 個 Excel 檔案"),
+                            html.Strong(f"已處理 {len(rows)} 個報表檔案"),
                             html.Span(
                                 f"{completed} 個完成 · {failed} 個失敗 · "
                                 f"本批次共寫入 {imported_rows:,} 筆資料"

@@ -145,7 +145,7 @@
                   "id": "biEQ1",
                   "name": "Dropzone title",
                   "fill": "$text-primary",
-                  "content": "將多個 Excel 檔案拖曳到這裡",
+                  "content": "將 Excel 或 Outlook 訊息檔拖曳到這裡",
                   "fontFamily": "$font-ui",
                   "fontSize": 18,
                   "fontWeight": "700"
@@ -155,7 +155,7 @@
                   "id": "RUcRz",
                   "name": "Dropzone hint",
                   "fill": "$text-secondary",
-                  "content": "或點擊選擇檔案（可一次選取多個）",
+                  "content": "或點擊選擇報表檔案（可一次選取多個）",
                   "fontFamily": "$font-ui",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -165,7 +165,7 @@
                   "id": "D7CaK",
                   "name": "Accepted file formats",
                   "fill": "$text-secondary",
-                  "content": "支援 .xlsx、.xls ",
+                  "content": "支援 .xlsx、.xls、.msg",
                   "fontFamily": "$font-ui",
                   "fontSize": 12,
                   "fontWeight": "normal"
@@ -213,7 +213,7 @@
                           "id": "UK7gn",
                           "name": "Batch status title",
                           "fill": "$text-primary",
-                          "content": "正在上傳 50 個 Excel 檔案",
+                          "content": "正在處理 50 個報表檔案",
                           "fontFamily": "$font-ui",
                           "fontSize": 17,
                           "fontWeight": "700"
@@ -481,9 +481,9 @@
                             {
                               "type": "text",
                               "id": "iu8oa",
-                              "name": "Excel filename",
+                              "name": "Extracted workbook filename",
                               "fill": "$text-primary",
-                              "content": "DC084_20260709.xlsx",
+                              "content": "message.msg › DC029_20260626.xlsx",
                               "fontFamily": "$font-data",
                               "fontSize": 12,
                               "fontWeight": "600"
@@ -6669,9 +6669,9 @@
                           "id": "cSHk3",
                           "x": 54,
                           "y": 382,
-                          "name": "X axis 2025/07",
+                          "name": "X axis 2025/07/14",
                           "fill": "#94A3B8",
-                          "content": "2025/07",
+                          "content": "2025/07/14",
                           "fontFamily": "Geist Mono",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -6681,9 +6681,9 @@
                           "id": "LzBeX",
                           "x": 286,
                           "y": 382,
-                          "name": "X axis 2025/10",
+                          "name": "X axis 2025/10/14",
                           "fill": "#94A3B8",
-                          "content": "2025/10",
+                          "content": "2025/10/14",
                           "fontFamily": "Geist Mono",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -6693,9 +6693,9 @@
                           "id": "OxJu1",
                           "x": 520,
                           "y": 382,
-                          "name": "X axis 2026/01",
+                          "name": "X axis 2026/01/14",
                           "fill": "#94A3B8",
-                          "content": "2026/01",
+                          "content": "2026/01/14",
                           "fontFamily": "Geist Mono",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -6705,9 +6705,9 @@
                           "id": "XIdc5",
                           "x": 754,
                           "y": 382,
-                          "name": "X axis 2026/04",
+                          "name": "X axis 2026/04/14",
                           "fill": "#94A3B8",
-                          "content": "2026/04",
+                          "content": "2026/04/14",
                           "fontFamily": "Geist Mono",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -6717,9 +6717,9 @@
                           "id": "OG20Y",
                           "x": 948,
                           "y": 382,
-                          "name": "X axis 2026/07",
+                          "name": "X axis 2026/07/14",
                           "fill": "#94A3B8",
-                          "content": "2026/07",
+                          "content": "2026/07/14",
                           "fontFamily": "Geist Mono",
                           "fontSize": 11,
                           "fontWeight": "normal"

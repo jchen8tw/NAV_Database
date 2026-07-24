@@ -1,10 +1,13 @@
 import base64
 import binascii
 import re
+import zipfile
+from dataclasses import dataclass
 from datetime import date, datetime
 from io import BytesIO
 from typing import Any
 
+import extract_msg
 import polars as pl
 
 from src.database import (
@@ -40,15 +43,40 @@ NUMERIC_COLUMNS = {
     NAV_RATIO_COLUMN: pl.Float64,
     ASSET_RATIO_COLUMN: pl.Float64,
 }
+MSG_ZIP_PASSWORD = b"03374707"
+MSG_ARCHIVE_PREFIXES = "國壽越權報表"
+DC_WORKBOOK_PATTERN = re.compile(r"^DC\d{3}_\d{8}\.xlsx?$", re.IGNORECASE)
+ROC_WORKBOOK_PATTERN = re.compile(
+    r"^越權檢核\d{3}-\d{1,2}-\d{1,2}\.xls$", re.IGNORECASE
+)
+
+
+@dataclass(frozen=True)
+class ExtractedWorkbook:
+    """A workbook or archive-level failure discovered inside an MSG file."""
+
+    label: str
+    contents: bytes | None = None
+    error: str | None = None
+
+
+def decode_upload(contents: str) -> bytes:
+    """Decode a Dash data URL into its original bytes."""
+    try:
+        _, encoded = contents.split(",", 1)
+        return base64.b64decode(encoded, validate=True)
+    except (ValueError, binascii.Error) as exc:
+        raise ValueError("The uploaded file could not be decoded.") from exc
 
 
 def parse_excel(contents: str) -> pl.DataFrame:
     """Decode all recognized holdings worksheets into the canonical schema."""
-    try:
-        _, encoded = contents.split(",", 1)
-        workbook = BytesIO(base64.b64decode(encoded, validate=True))
-    except (ValueError, binascii.Error) as exc:
-        raise ValueError("The uploaded file could not be decoded.") from exc
+    return parse_excel_bytes(decode_upload(contents))
+
+
+def parse_excel_bytes(contents: bytes) -> pl.DataFrame:
+    """Parse workbook bytes without writing them to disk."""
+    workbook = BytesIO(contents)
 
     sheets = pl.read_excel(
         workbook,
@@ -77,8 +105,116 @@ def parse_excel(contents: str) -> pl.DataFrame:
 
     if not holdings:
         detail = f" ({errors[0]})" if errors else ""
-        raise ValueError(f"The workbook does not contain a recognized holdings table.{detail}")
+        raise ValueError(
+            f"The workbook does not contain a recognized holdings table.{detail}"
+        )
     return pl.concat(holdings, how="vertical_relaxed")
+
+
+def extract_msg_workbooks(contents: bytes) -> list[ExtractedWorkbook]:
+    """Read matching first-level workbooks from qualifying ZIP attachments."""
+    try:
+        with extract_msg.openMsg(contents) as message:
+            attachments = list(message.attachments)
+            archives = [
+                (_attachment_name(attachment), attachment.data)
+                for attachment in attachments
+                if _archive_family(_attachment_name(attachment)) is not None
+            ]
+    except Exception as exc:
+        raise ValueError(f"無法讀取 Outlook MSG 訊息：{exc}") from exc
+
+    if not archives:
+        raise ValueError("MSG 訊息中找不到符合命名規則的 ZIP 附件。")
+
+    results: list[ExtractedWorkbook] = []
+    for archive_name, archive_contents in archives:
+        family = _archive_family(archive_name)
+        if not isinstance(archive_contents, bytes):
+            results.append(
+                ExtractedWorkbook(archive_name, error="ZIP 附件沒有可讀取的二進位內容。")
+            )
+            continue
+        try:
+            results.extend(
+                _read_archive_workbooks(archive_name, archive_contents, family or "")
+            )
+        except zipfile.BadZipFile:
+            results.append(
+                ExtractedWorkbook(archive_name, error="ZIP 附件已損毀或格式無效。")
+            )
+        except RuntimeError as exc:
+            detail = (
+                "ZIP 密碼不正確。"
+                if "password" in str(exc).lower()
+                else f"無法解密 ZIP 附件：{exc}"
+            )
+            results.append(ExtractedWorkbook(archive_name, error=detail))
+        except NotImplementedError as exc:
+            results.append(
+                ExtractedWorkbook(archive_name, error=f"不支援此 ZIP 加密方式：{exc}")
+            )
+    return results
+
+
+def _attachment_name(attachment: Any) -> str:
+    try:
+        filename = attachment.getFilename()
+    except (AttributeError, TypeError):
+        filename = None
+    return str(
+        filename
+        or getattr(attachment, "longFilename", None)
+        or getattr(attachment, "name", "")
+    )
+
+
+def _archive_family(filename: str) -> str | None:
+    basename = filename.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
+    if not basename.lower().endswith(".zip"):
+        return None
+    stem = basename[:-4]
+    if stem.startswith(MSG_ARCHIVE_PREFIXES):
+        return "cathay"
+    if re.match(r"^\d{8}", stem):
+        return "date"
+    return None
+
+
+def _decode_zip_filename(info: zipfile.ZipInfo) -> str:
+    filename = info.filename
+    if info.flag_bits & 0x800:
+        return filename
+    try:
+        return filename.encode("cp437").decode("cp950")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return filename
+
+
+def _read_archive_workbooks(
+    archive_name: str, archive_contents: bytes, family: str
+) -> list[ExtractedWorkbook]:
+    pattern = DC_WORKBOOK_PATTERN if family == "cathay" else ROC_WORKBOOK_PATTERN
+    workbooks: list[ExtractedWorkbook] = []
+    with zipfile.ZipFile(BytesIO(archive_contents)) as archive:
+        for info in archive.infolist():
+            filename = _decode_zip_filename(info)
+            if info.is_dir() or "/" in filename or "\\" in filename:
+                continue
+            if not pattern.fullmatch(filename):
+                continue
+            workbook = archive.read(info, pwd=MSG_ZIP_PASSWORD)
+            workbooks.append(
+                ExtractedWorkbook(f"{archive_name} › {filename}", contents=workbook)
+            )
+    if not workbooks:
+        return [
+            ExtractedWorkbook(
+                archive_name,
+                error="ZIP 附件中沒有符合命名規則的第一層 Excel 報表。",
+            )
+        ]
+    return workbooks
 
 
 def _parse_sheet(worksheet: pl.DataFrame, sheet_name: str) -> pl.DataFrame | None:

@@ -18,18 +18,18 @@ def layout() -> html.Div:
                 id="excel-upload",
                 className="upload-box",
                 className_active="upload-box upload-box--active",
-                accept=".xlsx,.xls",
+                accept=".xlsx,.xls,.msg",
                 multiple=True,
                 children=html.Div(
                     [
                         html.Div("↑", className="upload-icon"),
-                        html.Strong("將多個 Excel 檔案拖曳到這裡"),
+                        html.Strong("將 Excel 或 Outlook 訊息檔拖曳到這裡"),
                         html.Span(
-                            "或點擊選擇檔案（可一次選取多個）",
+                            "或點擊選擇報表檔案（可一次選取多個）",
                             className="upload-hint",
                         ),
                         html.Span(
-                            "支援 .xlsx、.xls",
+                            "支援 .xlsx、.xls、.msg",
                             className="file-types",
                         ),
                     ]
