@@ -10,7 +10,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import polars as pl
-from dash import dash_table, html
+import dash_ag_grid as dag
+from dash import html
 
 import main
 from src import database, reader
@@ -582,28 +583,44 @@ class PresentationTests(unittest.TestCase):
             ),
             "custom",
         )
-        self.assertIsInstance(table, dash_table.DataTable)
+        self.assertIsInstance(table, dag.AgGrid)
         self.assertEqual(table.id, "custom")
         self.assertEqual(
-            [column["type"] for column in table.columns],
-            ["text", "text", "text", "text", "numeric", "numeric", "numeric"],
+            [column["filter"] for column in table.columnDefs],
+            [
+                "agTextColumnFilter",
+                "agTextColumnFilter",
+                "agTextColumnFilter",
+                "agTextColumnFilter",
+                "agNumberColumnFilter",
+                "agNumberColumnFilter",
+                "agNumberColumnFilter",
+            ],
         )
         currency = next(
-            column for column in table.columns
-            if column["id"] == database.CURRENCY_COLUMN
+            column for column in table.columnDefs
+            if column["field"] == database.CURRENCY_COLUMN
         )
         self.assertEqual(
             currency,
-            {"name": "幣別", "id": database.CURRENCY_COLUMN, "type": "text"},
+            {
+                "headerName": "幣別",
+                "field": database.CURRENCY_COLUMN,
+                "filter": "agTextColumnFilter",
+                "tooltipField": database.CURRENCY_COLUMN,
+            },
         )
-        self.assertEqual(table.style_table["overflowX"], "auto")
-        self.assertEqual(table.style_header["whiteSpace"], "normal")
+        self.assertEqual(table.rowData[0][database.ACCOUNT_CODE_COLUMN], "A001")
+        self.assertEqual(table.dashGridOptions["paginationPageSize"], 20)
+        self.assertTrue(table.dashGridOptions["alwaysMultiSort"])
+        self.assertTrue(table.defaultColDef["floatingFilter"])
+        self.assertEqual(table.style["height"], "440px")
 
     def test_daily_csv_download_uses_virtual_rows_and_display_columns(self):
         columns = [
-            {"name": "幣別", "id": database.CURRENCY_COLUMN},
-            {"name": "標的名稱", "id": daily.TARGET_NAME_COLUMN},
-            {"name": "庫存單位數", "id": daily.UNITS_COLUMN},
+            {"headerName": "幣別", "field": database.CURRENCY_COLUMN},
+            {"headerName": "標的名稱", "field": daily.TARGET_NAME_COLUMN},
+            {"headerName": "庫存單位數", "field": daily.UNITS_COLUMN},
         ]
         filtered_and_sorted_rows = [
             {
@@ -634,8 +651,8 @@ class PresentationTests(unittest.TestCase):
         download = daily.make_csv_download(
             [],
             [
-                {"name": "幣別", "id": database.CURRENCY_COLUMN},
-                {"name": "標的名稱", "id": daily.TARGET_NAME_COLUMN},
+                {"headerName": "幣別", "field": database.CURRENCY_COLUMN},
+                {"headerName": "標的名稱", "field": daily.TARGET_NAME_COLUMN},
             ],
             "2025-01-02",
         )
@@ -709,8 +726,8 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(class_name, "batch-status batch-status--mixed")
         self.assertIn("1 個失敗", " ".join(text_content(message)))
         status_table = message.children[1]
-        self.assertEqual(status_table.data[0]["status"], "失敗")
-        self.assertIn(".xlsx", status_table.data[0]["detail"])
+        self.assertEqual(status_table.rowData[0]["status"], "失敗")
+        self.assertIn(".xlsx", status_table.rowData[0]["detail"])
 
     def test_upload_callback_processes_each_workbook_independently(self):
         frames = [
@@ -729,10 +746,17 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(store.call_count, 2)
         self.assertIn("2 個完成 · 1 個失敗", " ".join(text_content(result)))
         self.assertEqual(
-            [row["status"] for row in result.children[1].data],
+            [row["status"] for row in result.children[1].rowData],
             ["完成", "失敗", "完成"],
         )
-        self.assertEqual(result.children[1].page_size, 6)
+        status_table = result.children[1]
+        self.assertIsInstance(status_table, dag.AgGrid)
+        self.assertEqual(status_table.dashGridOptions["paginationPageSize"], 6)
+        self.assertEqual([column["flex"] for column in status_table.columnDefs], [4, 1.2, 4.8])
+        status_style = status_table.columnDefs[1]["cellStyle"]
+        self.assertEqual(
+            status_style["styleConditions"][0]["style"]["color"], "#166534"
+        )
 
     def test_upload_callback_processes_msg_workbooks_independently(self):
         frames = [
@@ -768,7 +792,7 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(class_name, "batch-status batch-status--mixed")
         self.assertEqual(store.call_count, 2)
         self.assertEqual(
-            [row["filename"] for row in result.children[1].data],
+            [row["filename"] for row in result.children[1].rowData],
             [
                 "message.msg › DC029_20260626.xlsx",
                 "message.msg › DC030_20260626.xlsx",

@@ -1,6 +1,7 @@
 from pathlib import Path
 import polars as pl
-from dash import Dash, Input, Output, State, dash_table, dcc, html
+import dash_ag_grid as dag
+from dash import Dash, Input, Output, State, dcc, html
 from dash.exceptions import PreventUpdate
 
 from src.pages import daily, history, upload
@@ -36,108 +37,136 @@ NUMERIC_COLUMNS = (
 
 def make_table(
     df: pl.DataFrame, table_id: str = "holdings-table"
-) -> dash_table.DataTable:
+) -> dag.AgGrid:
     numeric_columns = set(NUMERIC_COLUMNS)
     columns = [
         {
-            "name": "幣別" if name == CURRENCY_COLUMN else name,
-            "id": name,
-            "type": "numeric" if name in numeric_columns else "text",
+            "headerName": "幣別" if name == CURRENCY_COLUMN else name,
+            "field": name,
+            "filter": (
+                "agNumberColumnFilter"
+                if name in numeric_columns
+                else "agTextColumnFilter"
+            ),
+            "tooltipField": name,
         }
         for name in df.columns
     ]
 
-    return dash_table.DataTable(
+    return dag.AgGrid(
         id=table_id,
-        columns=columns,  # type: ignore[arg-type] -- Dash's generated stub is invariant.
-        data=df.to_dicts(),  # type: ignore[arg-type] -- Polars values are JSON-compatible.
-        page_size=20,
-        page_action="native",
-        sort_action="native",
-        sort_mode="multi",
-        filter_action="native",
-        fixed_rows={"headers": True},
-        style_table={"overflowX": "auto", "maxHeight": "440px"},
-        style_cell={
-            "fontFamily": "Inter, system-ui, sans-serif",
-            "fontSize": 13,
-            "padding": "10px 12px",
-            "textAlign": "left",
-            "minWidth": "100px",
-            "maxWidth": "260px",
-            "overflow": "hidden",
-            "textOverflow": "ellipsis",
+        columnDefs=columns,
+        rowData=df.to_dicts(),
+        defaultColDef={
+            "sortable": True,
+            "resizable": True,
+            "floatingFilter": True,
+            "minWidth": 100,
+            "maxWidth": 260,
         },
-        style_header={
-            "backgroundColor": "#eef2ff",
-            "color": "#27326b",
-            "fontWeight": 700,
-            "borderBottom": "2px solid #c7d2fe",
-            "whiteSpace": "normal",
-            "height": "auto",
+        dashGridOptions={
+            "pagination": True,
+            "paginationPageSize": 20,
+            "paginationPageSizeSelector": False,
+            "alwaysMultiSort": True,
+            "tooltipShowDelay": 400,
+            "tooltipHideDelay": 0,
+            "theme": {
+                "function": (
+                    "themeQuartz.withParams({"
+                    "fontFamily: 'Inter, system-ui, sans-serif',"
+                    "fontSize: 13,"
+                    "headerBackgroundColor: '#eef2ff',"
+                    "headerTextColor: '#27326b',"
+                    "headerFontWeight: 700,"
+                    "headerColumnBorder: { color: '#c7d2fe', width: 1 },"
+                    "rowBorder: { color: '#e2e8f0', width: 1 },"
+                    "spacing: 8"
+                    "})"
+                )
+            },
         },
-        style_filter={"backgroundColor": "#f8fafc"},
-        style_data_conditional=[
-            {
-                "if": {"row_index": "odd"},
-                "backgroundColor": "#f8fafc",
-            }
-        ],
-        tooltip_delay=400,
-        tooltip_duration=None,
+        getRowStyle={
+            "styleConditions": [
+                {
+                    "condition": "params.node.rowIndex % 2 === 1",
+                    "style": {"backgroundColor": "#f8fafc"},
+                }
+            ]
+        },
+        style={"height": "440px", "width": "100%", "overflowX": "auto"},
     )
 
 
-def make_upload_status_table(rows: list[dict[str, str]]) -> dash_table.DataTable:
+def make_upload_status_table(rows: list[dict[str, str]]) -> dag.AgGrid:
     """Render a compact, paginated status list for a batch of workbooks."""
-    return dash_table.DataTable(
+    return dag.AgGrid(
         id="upload-status-table",
-        columns=[
-            {"name": "檔案", "id": "filename"},
-            {"name": "狀態", "id": "status"},
-            {"name": "詳細資訊", "id": "detail"},
+        columnDefs=[
+            {
+                "headerName": "檔案",
+                "field": "filename",
+                "flex": 4,
+                "cellStyle": {
+                    "fontFamily": "Geist Mono, ui-monospace, monospace",
+                    "fontWeight": 600,
+                },
+            },
+            {
+                "headerName": "狀態",
+                "field": "status",
+                "flex": 1.2,
+                "cellStyle": {
+                    "styleConditions": [
+                        {
+                            "condition": "params.value === '完成'",
+                            "style": {"color": "#166534"},
+                        },
+                        {
+                            "condition": "params.value === '失敗'",
+                            "style": {"color": "#b91c1c"},
+                        },
+                    ],
+                    "defaultStyle": {"fontWeight": 700},
+                },
+            },
+            {
+                "headerName": "詳細資訊",
+                "field": "detail",
+                "flex": 4.8,
+                "cellStyle": {"color": "#64748b"},
+            },
         ],
-        data=rows,
-        page_size=6,
-        page_action="native",
-        sort_action="native",
-        style_table={"overflowX": "auto"},
-        style_cell={
-            "fontFamily": "Inter, system-ui, sans-serif",
-            "fontSize": 12,
-            "padding": "11px 16px",
-            "textAlign": "left",
-            "border": "none",
-            "borderBottom": "1px solid #e2e8f0",
+        rowData=rows,
+        defaultColDef={"sortable": True, "resizable": True, "minWidth": 90},
+        dashGridOptions={
+            "pagination": True,
+            "paginationPageSize": 6,
+            "paginationPageSizeSelector": False,
+            "domLayout": "autoHeight",
+            "theme": {
+                "function": (
+                    "themeQuartz.withParams({"
+                    "fontFamily: 'Inter, system-ui, sans-serif',"
+                    "fontSize: 12,"
+                    "headerBackgroundColor: '#f8fafc',"
+                    "headerTextColor: '#64748b',"
+                    "headerFontWeight: 700,"
+                    "rowBorder: { color: '#e2e8f0', width: 1 },"
+                    "spacing: 8"
+                    "})"
+                )
+            },
         },
-        style_cell_conditional=[
-            {
-                "if": {"column_id": "filename"},
-                "fontFamily": "Geist Mono, ui-monospace, monospace",
-                "fontWeight": 600,
-                "width": "40%",
-            },
-            {"if": {"column_id": "status"}, "fontWeight": 700, "width": "12%"},
-            {"if": {"column_id": "detail"}, "color": "#64748b"},
-        ],
-        style_header={
-            "backgroundColor": "#f8fafc",
-            "color": "#64748b",
-            "fontWeight": 700,
-            "border": "none",
-            "borderBottom": "1px solid #e2e8f0",
+        getRowStyle={
+            "styleConditions": [
+                {
+                    "condition": "params.node.rowIndex % 2 === 1",
+                    "style": {"backgroundColor": "#fafbfd"},
+                }
+            ]
         },
-        style_data_conditional=[
-            {
-                "if": {"filter_query": '{status} = "完成"', "column_id": "status"},
-                "color": "#166534",
-            },
-            {
-                "if": {"filter_query": '{status} = "失敗"', "column_id": "status"},
-                "color": "#b91c1c",
-            },
-            {"if": {"row_index": "odd"}, "backgroundColor": "#fafbfd"},
-        ],
+        style={"width": "100%", "overflowX": "auto"},
     )
 
 
@@ -204,8 +233,8 @@ def update_daily_table(report_date: str | None):
 @app.callback(
     Output("daily-csv-download", "data"),
     Input("daily-export-button", "n_clicks"),
-    State("daily-holdings-table", "derived_virtual_data"),
-    State("daily-holdings-table", "columns"),
+    State("daily-holdings-table", "virtualRowData"),
+    State("daily-holdings-table", "columnDefs"),
     State("daily-date-picker", "date"),
     prevent_initial_call=True,
 )

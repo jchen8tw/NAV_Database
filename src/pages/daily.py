@@ -41,12 +41,13 @@ def make_csv_download(
     output.write("\ufeff")
     writer = csv.writer(output)
     writer.writerow([
-        " ".join(column["name"]) if isinstance(column["name"], list)
-        else column["name"]
+        " ".join(column["headerName"])
+        if isinstance(column["headerName"], list)
+        else column["headerName"]
         for column in columns
     ])
     for row in rows or []:
-        writer.writerow([row.get(column["id"]) for column in columns])
+        writer.writerow([row.get(column["field"]) for column in columns])
     return {
         "content": output.getvalue(),
         "filename": f"daily_holdings_{report_date[:10]}.csv",

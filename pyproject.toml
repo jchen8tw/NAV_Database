@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "dash>=4.4.0",
+    "dash-ag-grid>=35.3.0",
     "extract-msg>=0.56.0",
     "fastexcel>=0.20.2",
     "numpy>=2.5.1",
