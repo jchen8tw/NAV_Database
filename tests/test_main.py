@@ -1,4 +1,6 @@
 import base64
+import csv
+from io import StringIO
 import sqlite3
 import tempfile
 import unittest
@@ -20,6 +22,19 @@ def text_content(component) -> list[str]:
     if isinstance(component, (list, tuple)):
         return [text for child in component for text in text_content(child)]
     return text_content(getattr(component, "children", []))
+
+
+def find_component(component, component_id):
+    if getattr(component, "id", None) == component_id:
+        return component
+    children = getattr(component, "children", [])
+    if not isinstance(children, (list, tuple)):
+        children = [children]
+    for child in children:
+        found = find_component(child, component_id)
+        if found is not None:
+            return found
+    return None
 
 
 class WorkbookParsingTests(unittest.TestCase):
@@ -45,28 +60,37 @@ class WorkbookParsingTests(unittest.TestCase):
 
     def test_parse_excel_decodes_cleans_and_types_holdings(self):
         headers = [
-            "ISIN", "庫存單位數", "基金淨值/ETF收盤價", "持有市值(帳戶幣別)",
+            "ISIN", "庫存單位數", "基金淨值/ETF收盤價", "商品幣別", "持有市值(帳戶幣別)",
             "持有市值(標的幣別)", "標的發行規模（標的幣別）或流通股數",
             "佔淨資產比重(%)", "佔標的資產或單位數比重(%)",
         ]
         rows = [
-            ["專戶代號：", " A001 ", "專戶名稱:", " Alpha Fund ", *([""] * 4)],
-            ["檢查日期", "2025/02/03", *([""] * 6)],
-            *([["metadata", *([""] * 7)]] * 4),
+            ["專戶代號：", " A001 ", "專戶名稱:", " Alpha Fund ", *([""] * 5)],
+            ["檢查日期", "2025/02/03", *([""] * 7)],
+            *([["metadata", *([""] * 8)]] * 4),
             headers,
-            [" TW0001 ", "1,200", "10.5", "2,400", "2,500", "3,000", "12.5%", "4%"],
-            ["footer", *([""] * 7)],
+            [" TW0001 ", "1,200", "10.5", " USD ", "2,400", "2,500", "3,000", "12.5%", "4%"],
+            ["footer", *([""] * 8)],
         ]
-        worksheet = pl.DataFrame(rows, orient="row", schema=[f"column_{i}" for i in range(8)])
+        worksheet = pl.DataFrame(rows, orient="row", schema=[f"column_{i}" for i in range(9)])
         contents = "data:application/octet-stream;base64," + base64.b64encode(b"workbook").decode()
 
         with patch("src.reader.pl.read_excel", return_value=worksheet) as read_excel:
             result = reader.parse_excel(contents)
 
-        read_excel.assert_called_once_with(unittest.mock.ANY, has_header=False)
+        read_excel.assert_called_once_with(
+            unittest.mock.ANY,
+            sheet_id=0,
+            has_header=False,
+            raise_if_empty=False,
+            drop_empty_rows=False,
+            drop_empty_cols=False,
+            infer_schema_length=None,
+        )
         self.assertEqual(result.height, 1)
         self.assertEqual(result["ISIN"].item(), "TW0001")
         self.assertEqual(result["庫存單位數"].item(), 1200.0)
+        self.assertEqual(result[database.CURRENCY_COLUMN].item(), "USD")
         self.assertEqual(result["佔淨資產比重(%)"].item(), 12.5)
         self.assertEqual(result[database.DATE_COLUMN].item(), "2025-02-03")
         self.assertEqual(result[reader.ACCOUNT_CODE_COLUMN].item(), "A001")
@@ -86,6 +110,58 @@ class WorkbookParsingTests(unittest.TestCase):
     def test_parse_excel_rejects_invalid_base64(self):
         with self.assertRaisesRegex(ValueError, "could not be decoded"):
             reader.parse_excel("data:application/octet-stream;base64,not-base64!")
+
+    def test_parse_supplied_legacy_workbook(self):
+        contents = "data:application/vnd.ms-excel;base64," + base64.b64encode(
+            (Path("sample") / "越權檢核115-07-08.xls").read_bytes()
+        ).decode()
+
+        result = reader.parse_excel(contents)
+
+        self.assertEqual(result.height, 19)
+        self.assertEqual(result[database.ACCOUNT_CODE_COLUMN].unique().to_list(), ["S000000002001"])
+        self.assertEqual(result[database.DATE_COLUMN].unique().to_list(), ["2026-07-08"])
+        self.assertEqual(result[database.ACCOUNT_NAME_COLUMN].item(0), "國泰人壽委託聯博投信投資帳戶-多元守護")
+        self.assertEqual(result["ISIN"].item(0), "US4642874329")
+        self.assertEqual(result["標的名稱"].item(0), "ISHARES 20+ YEAR TREASURY BOND ETF")
+        self.assertEqual(result["庫存單位數"].item(0), 75273.0)
+        self.assertEqual(result["基金淨值/ETF收盤價"].item(0), 84.36)
+        self.assertEqual(result[database.CURRENCY_COLUMN].item(0), "USD")
+        self.assertEqual(result["持有市值(帳戶幣別)"].item(0), 6350030.28)
+        self.assertEqual(result[database.ISSUE_SIZE_COLUMN].dtype, pl.Int64)
+        self.assertEqual(result[database.ISSUE_SIZE_COLUMN].item(16), 45223366556666)
+        self.assertEqual(result[database.NAV_RATIO_COLUMN].item(0), 3.75)
+        self.assertEqual(result[database.ASSET_RATIO_COLUMN].item(0), 0.0313)
+        self.assertIsNone(result["標的種類"].item(0))
+        self.assertIsNone(result["類型別"].item(0))
+        self.assertEqual(result["持有市值(標的幣別)"].item(0), 6350030.28)
+
+    def test_parse_combines_recognized_sheets_and_rejects_unrecognized_workbook(self):
+        headers = [*reader.SECOND_FORMAT_COLUMNS.values(), "市值(EUR)"]
+        def sheet(isin):
+            values = ["Account", "115-07-08", isin, "Fund", "1,000", "10", "EUR", "3,000", "4%", "0.5%", "2,000"]
+            return pl.DataFrame([headers, values], orient="row")
+        contents = "data:x;base64," + base64.b64encode(b"book").decode()
+        with patch("src.reader.pl.read_excel", return_value={"A001": sheet("F1"), "empty": pl.DataFrame(), "A002": sheet("F2")}):
+            result = reader.parse_excel(contents)
+        self.assertEqual(result[database.ACCOUNT_CODE_COLUMN].to_list(), ["A001", "A002"])
+        self.assertEqual(result["持有市值(帳戶幣別)"].to_list(), [2000.0, 2000.0])
+        self.assertEqual(result["持有市值(標的幣別)"].to_list(), [2000.0, 2000.0])
+        with patch("src.reader.pl.read_excel", return_value={"summary": pl.DataFrame([["summary"]], orient="row")}):
+            with self.assertRaisesRegex(ValueError, "recognized holdings table"):
+                reader.parse_excel(contents)
+
+    def test_second_format_leaves_target_market_value_empty_for_other_currency(self):
+        headers = [*reader.SECOND_FORMAT_COLUMNS.values(), "市值（ USD ）"]
+        values = ["Account", "115-07-08", "F1", "Fund", "1", "10", "JPY", "3,000", "4%", "0.5%", "2,000"]
+        contents = "data:x;base64," + base64.b64encode(b"book").decode()
+        with patch(
+            "src.reader.pl.read_excel",
+            return_value={"A001": pl.DataFrame([headers, values], orient="row")},
+        ):
+            result = reader.parse_excel(contents)
+        self.assertEqual(result["持有市值(帳戶幣別)"].item(), 2000.0)
+        self.assertIsNone(result["持有市值(標的幣別)"].item())
 
 
 class DataHelpersTests(unittest.TestCase):
@@ -117,6 +193,7 @@ class DatabaseTests(unittest.TestCase):
         row_count = len(next(iter(rows.values())))
         rows = {
             **rows,
+            database.CURRENCY_COLUMN: ["USD"] * row_count,
             database.ACCOUNT_NAME_COLUMN: ["Alpha Fund"] * row_count,
             database.ISSUE_SIZE_COLUMN: [1_000_000] * row_count,
             database.NAV_RATIO_COLUMN: [1.5] * row_count,
@@ -133,6 +210,7 @@ class DatabaseTests(unittest.TestCase):
                 "類型別": pl.String,
                 "庫存單位數": pl.Float64,
                 "基金淨值/ETF收盤價": pl.Float64,
+                database.CURRENCY_COLUMN: pl.String,
                 daily.ACCOUNT_VALUE_COLUMN: pl.Float64,
                 "持有市值(標的幣別)": pl.Float64,
                 database.ACCOUNT_NAME_COLUMN: pl.String,
@@ -160,6 +238,28 @@ class DatabaseTests(unittest.TestCase):
             pl.lit("A002").alias(database.ACCOUNT_CODE_COLUMN)
         )
         self.assertEqual(database.store_dataframe(other_account, self.database), 2)
+
+    def test_store_backfills_each_missing_classification_from_newest_history(self):
+        old = self.holdings({
+            "ISIN": ["F1", "F1"], database.DATE_COLUMN: ["2025-01-01", "2025-02-01"],
+            "標的名稱": ["Fund", "Fund"], "標的種類": ["舊種類", "新種類"],
+            "類型別": ["唯一類型", ""], "庫存單位數": [1.0, 1.0],
+            "基金淨值/ETF收盤價": [10.0, 10.0], "持有市值(標的幣別)": [10.0, 10.0],
+        })
+        database.store_dataframe(old, self.database)
+        incoming = self.holdings({
+            "ISIN": ["F1", "F2", "F1"], database.DATE_COLUMN: ["2025-03-01"] * 3,
+            "標的名稱": ["Fund", "Other", "Fund"], "標的種類": [None, None, "工作簿種類"],
+            "類型別": [None, None, "工作簿類型"], "庫存單位數": [1.0] * 3,
+            "基金淨值/ETF收盤價": [10.0] * 3, "持有市值(標的幣別)": [10.0] * 3,
+        }).with_columns(pl.Series(database.ACCOUNT_CODE_COLUMN, ["A001", "A001", "A002"]))
+        database.store_dataframe(incoming, self.database)
+        with sqlite3.connect(self.database) as connection:
+            rows = connection.execute(
+                'SELECT "ISIN", "標的種類", "類型別", "專戶代號" FROM holdings WHERE "檢查日期" = ? ORDER BY "專戶代號", "ISIN"',
+                ("2025-03-01",),
+            ).fetchall()
+        self.assertEqual(rows, [("F1", "新種類", "唯一類型", "A001"), ("F2", None, None, "A001"), ("F1", "工作簿種類", "工作簿類型", "A002")])
 
     def test_store_adds_account_metadata_columns(self):
         holdings = self.holdings({
@@ -223,12 +323,14 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual(daily_holdings.height, 2)
         self.assertEqual(daily_holdings[database.ACCOUNT_CODE_COLUMN].to_list(), ["A001", "A001"])
         self.assertEqual(daily_holdings[database.ACCOUNT_NAME_COLUMN].to_list(), ["Alpha Fund", "Alpha Fund"])
+        self.assertEqual(daily_holdings[database.CURRENCY_COLUMN].to_list(), ["USD", "USD"])
         self.assertEqual(daily_holdings[database.ISSUE_SIZE_COLUMN].to_list(), [1_000_000, 1_000_000])
         self.assertEqual(daily_holdings[database.NAV_RATIO_COLUMN].to_list(), [1.5, 1.5])
         self.assertEqual(daily_holdings[database.ASSET_RATIO_COLUMN].to_list(), [0.25, 0.25])
         history_rows = database.load_holdings_history(self.database)
         self.assertEqual(history_rows.columns, [database.DATE_COLUMN, *database.HOLDINGS_COLUMNS])
         self.assertEqual(history_rows.height, 3)
+        self.assertEqual(history_rows[database.CURRENCY_COLUMN].to_list(), ["USD"] * 3)
 
     def test_holdings_history_preserves_accounts(self):
         data = self.holdings({
@@ -270,7 +372,12 @@ class PresentationTests(unittest.TestCase):
         self.assertIn("單日的所有基金與全委帳戶的資料", daily_copy)
         self.assertIn("選擇要檢視的單日資料", daily_copy)
         self.assertIn("資料檢視", daily_copy)
+        self.assertIn("輸出成csv", daily_copy)
         daily_layout = daily.layout([], lambda _: pl.DataFrame(), main.make_table)
+        export_button = find_component(daily_layout, "daily-export-button")
+        self.assertIsNotNone(export_button)
+        self.assertTrue(export_button.disabled)
+        self.assertIsNotNone(find_component(daily_layout, "daily-csv-download"))
         self.assertEqual(
             [option["label"] for option in daily_layout.children[3].children[0].children[1].options],
             ["查看標的", "查看專戶"],
@@ -348,6 +455,7 @@ class PresentationTests(unittest.TestCase):
                     database.ACCOUNT_CODE_COLUMN: ["A001"],
                     database.ACCOUNT_NAME_COLUMN: ["Alpha Fund"],
                     "ISIN": ["F1"],
+                    database.CURRENCY_COLUMN: ["USD"],
                     database.ISSUE_SIZE_COLUMN: [1_000_000],
                     database.NAV_RATIO_COLUMN: [1.5],
                     database.ASSET_RATIO_COLUMN: [0.25],
@@ -359,10 +467,62 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(table.id, "custom")
         self.assertEqual(
             [column["type"] for column in table.columns],
-            ["text", "text", "text", "numeric", "numeric", "numeric"],
+            ["text", "text", "text", "text", "numeric", "numeric", "numeric"],
+        )
+        currency = next(
+            column for column in table.columns
+            if column["id"] == database.CURRENCY_COLUMN
+        )
+        self.assertEqual(
+            currency,
+            {"name": "幣別", "id": database.CURRENCY_COLUMN, "type": "text"},
         )
         self.assertEqual(table.style_table["overflowX"], "auto")
         self.assertEqual(table.style_header["whiteSpace"], "normal")
+
+    def test_daily_csv_download_uses_virtual_rows_and_display_columns(self):
+        columns = [
+            {"name": "幣別", "id": database.CURRENCY_COLUMN},
+            {"name": "標的名稱", "id": daily.TARGET_NAME_COLUMN},
+            {"name": "庫存單位數", "id": daily.UNITS_COLUMN},
+        ]
+        filtered_and_sorted_rows = [
+            {
+                database.CURRENCY_COLUMN: "TWD",
+                daily.TARGET_NAME_COLUMN: "基金乙",
+                daily.UNITS_COLUMN: 20.5,
+            },
+            {
+                database.CURRENCY_COLUMN: "USD",
+                daily.TARGET_NAME_COLUMN: "基金甲",
+                daily.UNITS_COLUMN: 10,
+            },
+        ]
+
+        download = main.download_daily_csv(
+            1, filtered_and_sorted_rows, columns, "2025-01-02"
+        )
+
+        self.assertEqual(download["filename"], "daily_holdings_2025-01-02.csv")
+        self.assertEqual(download["type"], "text/csv;charset=utf-8")
+        self.assertTrue(download["content"].startswith("\ufeff"))
+        parsed = list(csv.reader(StringIO(download["content"].lstrip("\ufeff"))))
+        self.assertEqual(parsed[0], ["幣別", "標的名稱", "庫存單位數"])
+        self.assertEqual(parsed[1], ["TWD", "基金乙", "20.5"])
+        self.assertEqual(parsed[2], ["USD", "基金甲", "10"])
+
+    def test_daily_csv_download_with_zero_filtered_rows_keeps_headers(self):
+        download = daily.make_csv_download(
+            [],
+            [
+                {"name": "幣別", "id": database.CURRENCY_COLUMN},
+                {"name": "標的名稱", "id": daily.TARGET_NAME_COLUMN},
+            ],
+            "2025-01-02",
+        )
+
+        parsed = list(csv.reader(StringIO(download["content"].lstrip("\ufeff"))))
+        self.assertEqual(parsed, [["幣別", "標的名稱"]])
 
     def test_page_helpers_cover_empty_and_date_ranges(self):
         empty = daily.make_table_content(pl.DataFrame(), None, main.make_table)

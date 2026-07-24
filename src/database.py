@@ -14,6 +14,7 @@ ACCOUNT_NAME_COLUMN = "專戶名稱"
 ISSUE_SIZE_COLUMN = "標的發行規模（標的幣別）或流通股數"
 NAV_RATIO_COLUMN = "佔淨資產比重(%)"
 ASSET_RATIO_COLUMN = "佔標的資產或單位數比重(%)"
+CURRENCY_COLUMN = "商品幣別"
 HOLDINGS_COLUMNS = [
     ACCOUNT_CODE_COLUMN,
     ACCOUNT_NAME_COLUMN,
@@ -23,6 +24,7 @@ HOLDINGS_COLUMNS = [
     "類型別",
     "庫存單位數",
     "基金淨值/ETF收盤價",
+    CURRENCY_COLUMN,
     "持有市值(帳戶幣別)",
     "持有市值(標的幣別)",
     ISSUE_SIZE_COLUMN,
@@ -141,6 +143,8 @@ def store_dataframe(df: pl.DataFrame, database_path: Path = DATABASE_PATH) -> in
                         f"{quote_identifier(column)} {sqlite_type(dtype)}"
                     )
 
+        df = backfill_classifications(df, connection)
+
         quoted_columns = [quote_identifier(column) for column in df.columns]
         placeholders = ", ".join("?" for _ in df.columns)
         update_columns = [column for column in df.columns if column not in primary_key_columns]
@@ -161,6 +165,45 @@ def store_dataframe(df: pl.DataFrame, database_path: Path = DATABASE_PATH) -> in
         connection.executemany(statement, rows)
         total_rows = connection.execute(f"SELECT COUNT(*) FROM {quoted_table}").fetchone()
     return int(total_rows[0])
+
+
+def backfill_classifications(
+    df: pl.DataFrame, connection: sqlite3.Connection
+) -> pl.DataFrame:
+    """Fill missing classifications from the newest stored row for each ISIN."""
+    classification_columns = ["標的種類", "類型別"]
+    if not all(column in df.columns for column in classification_columns):
+        return df
+    isin_column = find_isin_column(df)
+    historical: dict[str, dict[str, str]] = {
+        column: {} for column in classification_columns
+    }
+    for column in classification_columns:
+        rows = connection.execute(
+            f"SELECT {quote_identifier(isin_column)}, {quote_identifier(column)} "
+            f"FROM {quote_identifier(TABLE_NAME)} "
+            f"WHERE {quote_identifier(column)} IS NOT NULL "
+            f"AND TRIM(CAST({quote_identifier(column)} AS TEXT)) <> '' "
+            f"ORDER BY {quote_identifier(DATE_COLUMN)} DESC"
+        ).fetchall()
+        for isin, value in rows:
+            historical[column].setdefault(str(isin).strip(), str(value).strip())
+
+    expressions = []
+    for column in classification_columns:
+        fallback = pl.col(isin_column).cast(pl.String).str.strip_chars().replace_strict(
+            historical[column], default=None, return_dtype=pl.String
+        )
+        expressions.append(
+            pl.when(
+                pl.col(column).is_null()
+                | (pl.col(column).cast(pl.String).str.strip_chars() == "")
+            )
+            .then(fallback)
+            .otherwise(pl.col(column))
+            .alias(column)
+        )
+    return df.with_columns(expressions)
 
 
 def load_holdings_history(database_path: Path = DATABASE_PATH) -> pl.DataFrame:

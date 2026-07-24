@@ -1,4 +1,6 @@
 from collections.abc import Callable
+import csv
+from io import StringIO
 
 import polars as pl
 import plotly.graph_objects as go
@@ -27,6 +29,29 @@ METRIC_OPTIONS = {
     ],
 }
 CHART_COLORS = ["#4F46E5", "#06B6D4", "#F59E0B", "#DB2777", "#16A34A", "#94A3B8"]
+
+
+def make_csv_download(
+    rows: list[dict] | None,
+    columns: list[dict] | None,
+    report_date: str,
+) -> dict[str, str]:
+    columns = columns or []
+    output = StringIO(newline="")
+    output.write("\ufeff")
+    writer = csv.writer(output)
+    writer.writerow([
+        " ".join(column["name"]) if isinstance(column["name"], list)
+        else column["name"]
+        for column in columns
+    ])
+    for row in rows or []:
+        writer.writerow([row.get(column["id"]) for column in columns])
+    return {
+        "content": output.getvalue(),
+        "filename": f"daily_holdings_{report_date[:10]}.csv",
+        "type": "text/csv;charset=utf-8",
+    }
 
 
 def selector_options(df: pl.DataFrame, mode: str) -> list[dict[str, str]]:
@@ -214,14 +239,29 @@ def layout(
                         ],
                         className="date-picker-copy",
                     ),
-                    dcc.DatePickerSingle(
-                        id="daily-date-picker",
-                        date=selected_date,
-                        min_date_allowed=dates[0] if dates else None,
-                        max_date_allowed=dates[-1] if dates else None,
-                        initial_visible_month=selected_date,
-                        display_format="YYYY / MM / DD",
-                        className="date-picker-control",
+                    html.Div(
+                        [
+                            dcc.DatePickerSingle(
+                                id="daily-date-picker",
+                                date=selected_date,
+                                min_date_allowed=dates[0] if dates else None,
+                                max_date_allowed=dates[-1] if dates else None,
+                                initial_visible_month=selected_date,
+                                display_format="YYYY / MM / DD",
+                                className="date-picker-control",
+                            ),
+                            html.Button(
+                                [
+                                    html.Span("↓", className="download-icon", **{"aria-hidden": "true"}),
+                                    "輸出成csv",
+                                ],
+                                id="daily-export-button",
+                                className="daily-export-button",
+                                disabled=holdings.is_empty(),
+                            ),
+                            dcc.Download(id="daily-csv-download"),
+                        ],
+                        className="daily-date-actions",
                     ),
                 ],
             ),

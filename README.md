@@ -27,7 +27,8 @@ Page-specific layouts and helpers are organized under `src/pages/` as
 The dashboard includes:
 
 - Drag-and-drop Excel uploads
-- Polars-based report parsing and cleanup, including `檢查日期` from workbook metadata
+- Polars-based parsing and cleanup for both supported custodian formats: the
+  metadata-based workbook and the worksheet-per-account `越權檢核` workbook
 - SQLite persistence in `nav_database.sqlite3`
 - Dated inserts and updates using `(ISIN, 檢查日期)` as the composite primary key
 - A single-day holdings table at `/daily` with a report-date picker

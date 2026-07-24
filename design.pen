@@ -1346,51 +1346,100 @@
                 },
                 {
                   "type": "frame",
-                  "id": "r7XvL",
-                  "name": "Selected date field",
-                  "width": 236,
+                  "id": "o7r6P",
+                  "name": "Date actions",
                   "height": 42,
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 8,
-                  "stroke": "#A5B4FC",
-                  "strokeWidth": 1,
-                  "strokeAlignment": "inner",
+                  "fill": "#FFFFFF00",
                   "gap": 10,
-                  "padding": [
-                    0,
-                    12
-                  ],
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "q1MtR",
-                      "name": "Calendar icon",
-                      "width": 18,
-                      "height": 18,
-                      "icon": "calendar-days",
-                      "library": "lucide",
-                      "fill": "$accent"
+                      "type": "frame",
+                      "id": "r7XvL",
+                      "name": "Selected date field",
+                      "width": 236,
+                      "height": 42,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#A5B4FC",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "q1MtR",
+                          "name": "Calendar icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "calendar-days",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        },
+                        {
+                          "type": "text",
+                          "id": "m8RcQ",
+                          "name": "Selected date",
+                          "fill": "$text-primary",
+                          "content": "2026 / 07 / 14",
+                          "fontFamily": "$font-data",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "v4HsN",
+                          "name": "Open calendar icon",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "m8RcQ",
-                      "name": "Selected date",
-                      "fill": "$text-primary",
-                      "content": "2026 / 07 / 14",
-                      "fontFamily": "$font-data",
-                      "fontSize": 14,
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "icon",
-                      "id": "v4HsN",
-                      "name": "Open calendar icon",
-                      "width": 16,
-                      "height": 16,
-                      "icon": "chevron-down",
-                      "library": "lucide",
-                      "fill": "$text-secondary"
+                      "type": "frame",
+                      "id": "k9kAz",
+                      "name": "Export CSV button",
+                      "width": 142,
+                      "height": 42,
+                      "fill": "#4F46E5",
+                      "cornerRadius": 8,
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "ci3GB",
+                          "name": "Download icon",
+                          "width": 17,
+                          "height": 17,
+                          "icon": "download",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "text",
+                          "id": "cRiNf",
+                          "name": "Export CSV label",
+                          "fill": "#FFFFFF",
+                          "content": "輸出成csv",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -1551,7 +1600,7 @@
                               "type": "frame",
                               "id": "jHje8",
                               "name": "標的名稱 header cell",
-                              "width": 155,
+                              "width": 135,
                               "height": "fill_container",
                               "fill": "$accent-soft",
                               "stroke": "#C7D2FE",
@@ -1617,7 +1666,7 @@
                               "type": "frame",
                               "id": "jgpdo",
                               "name": "類型別 header cell",
-                              "width": 100,
+                              "width": 90,
                               "height": "fill_container",
                               "fill": "$accent-soft",
                               "stroke": "#C7D2FE",
@@ -1714,9 +1763,41 @@
                             },
                             {
                               "type": "frame",
+                              "id": "VfxLc",
+                              "name": "幣別 header cell",
+                              "width": 70,
+                              "height": "fill_container",
+                              "fill": "#EEF2FF",
+                              "stroke": "#C7D2FE",
+                              "strokeWidth": {
+                                "right": 1,
+                                "bottom": 2
+                              },
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                0,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "dsah5",
+                                  "name": "幣別 header text",
+                                  "fill": "#27326B",
+                                  "content": "幣別",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
                               "id": "aMs8q",
                               "name": "持有市值（標的幣別） header cell",
-                              "width": 137,
+                              "width": 127,
                               "height": "fill_container",
                               "fill": "$accent-soft",
                               "stroke": "#C7D2FE",
@@ -1749,7 +1830,7 @@
                               "type": "frame",
                               "id": "MfVTx",
                               "name": "標的發行規模（標的幣別）或流通股數 header cell",
-                              "width": 160,
+                              "width": 140,
                               "height": "fill_container",
                               "fill": "#EEF2FF",
                               "stroke": "#C7D2FE",
@@ -1782,7 +1863,7 @@
                               "type": "frame",
                               "id": "iMT60",
                               "name": "佔淨資產比重(%) header cell",
-                              "width": 110,
+                              "width": 105,
                               "height": "fill_container",
                               "fill": "#EEF2FF",
                               "stroke": "#C7D2FE",
@@ -1815,7 +1896,7 @@
                               "type": "frame",
                               "id": "p7pVbL",
                               "name": "佔標的資產或單位數比重(%) header cell",
-                              "width": 120,
+                              "width": 115,
                               "height": "fill_container",
                               "fill": "#EEF2FF",
                               "stroke": "#C7D2FE",
@@ -2042,7 +2123,7 @@
                               "type": "frame",
                               "id": "LzZug",
                               "name": "標的名稱 filter cell",
-                              "width": 155,
+                              "width": 135,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -2166,7 +2247,7 @@
                               "type": "frame",
                               "id": "ZjxyQ",
                               "name": "類型別 filter cell",
-                              "width": 100,
+                              "width": 90,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -2350,9 +2431,56 @@
                             },
                             {
                               "type": "frame",
+                              "id": "jpvYf",
+                              "name": "幣別 filter cell",
+                              "width": 70,
+                              "height": "fill_container",
+                              "fill": "#F8FAFC",
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": {
+                                "right": 1,
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                6,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "wi43d",
+                                  "name": "幣別 filter field",
+                                  "width": "fill_container",
+                                  "height": "fill_container",
+                                  "fill": "#FFFFFF",
+                                  "cornerRadius": 5,
+                                  "stroke": "#CBD5E1",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "GXCtG",
+                                      "name": "幣別 filter placeholder",
+                                      "fill": "#94A3B8",
+                                      "content": "Filter…",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 9,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
                               "id": "dnQIl",
                               "name": "持有市值（標的幣別） filter cell",
-                              "width": 137,
+                              "width": 127,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -2414,7 +2542,7 @@
                               "type": "frame",
                               "id": "bS4ic",
                               "name": "標的發行規模（標的幣別）或流通股數 filter cell",
-                              "width": 160,
+                              "width": 140,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -2472,7 +2600,7 @@
                               "type": "frame",
                               "id": "JnXwB",
                               "name": "佔淨資產比重(%) filter cell",
-                              "width": 110,
+                              "width": 105,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -2530,7 +2658,7 @@
                               "type": "frame",
                               "id": "msMmw",
                               "name": "佔標的資產或單位數比重(%) filter cell",
-                              "width": 120,
+                              "width": 115,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -2697,7 +2825,7 @@
                               "type": "frame",
                               "id": "raSsW",
                               "name": "標的名稱 row 1 cell",
-                              "width": 155,
+                              "width": 135,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -2763,7 +2891,7 @@
                               "type": "frame",
                               "id": "mzUpY",
                               "name": "類型別 row 1 cell",
-                              "width": 100,
+                              "width": 90,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -2862,9 +2990,41 @@
                             },
                             {
                               "type": "frame",
+                              "id": "K8SkhH",
+                              "name": "幣別 row 1 cell",
+                              "width": 70,
+                              "height": "fill_container",
+                              "fill": "#FFFFFF",
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": {
+                                "right": 1,
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                0,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "o3AAj",
+                                  "name": "幣別 row 1 text",
+                                  "fill": "#4F46E5",
+                                  "content": "USD",
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
                               "id": "oRbmp",
                               "name": "持有市值（標的幣別） row 1 cell",
-                              "width": 137,
+                              "width": 127,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -2898,7 +3058,7 @@
                               "type": "frame",
                               "id": "kKs6c",
                               "name": "標的發行規模（標的幣別）或流通股數 row 1 cell",
-                              "width": 160,
+                              "width": 140,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -2932,7 +3092,7 @@
                               "type": "frame",
                               "id": "IVrGF",
                               "name": "佔淨資產比重(%) row 1 cell",
-                              "width": 110,
+                              "width": 105,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -2966,7 +3126,7 @@
                               "type": "frame",
                               "id": "F9Knas",
                               "name": "佔標的資產或單位數比重(%) row 1 cell",
-                              "width": 120,
+                              "width": 115,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -3109,7 +3269,7 @@
                               "type": "frame",
                               "id": "d1E2q",
                               "name": "標的名稱 row 2 cell",
-                              "width": 155,
+                              "width": 135,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -3175,7 +3335,7 @@
                               "type": "frame",
                               "id": "Lvhwj",
                               "name": "類型別 row 2 cell",
-                              "width": 100,
+                              "width": 90,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -3274,9 +3434,41 @@
                             },
                             {
                               "type": "frame",
+                              "id": "FYfJG",
+                              "name": "幣別 row 2 cell",
+                              "width": 70,
+                              "height": "fill_container",
+                              "fill": "#F8FAFC",
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": {
+                                "right": 1,
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                0,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "merUy",
+                                  "name": "幣別 row 2 text",
+                                  "fill": "#4F46E5",
+                                  "content": "USD",
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
                               "id": "wNcMM",
                               "name": "持有市值（標的幣別） row 2 cell",
-                              "width": 137,
+                              "width": 127,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -3310,7 +3502,7 @@
                               "type": "frame",
                               "id": "vsDPq",
                               "name": "標的發行規模（標的幣別）或流通股數 row 2 cell",
-                              "width": 160,
+                              "width": 140,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -3344,7 +3536,7 @@
                               "type": "frame",
                               "id": "buINy",
                               "name": "佔淨資產比重(%) row 2 cell",
-                              "width": 110,
+                              "width": 105,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -3378,7 +3570,7 @@
                               "type": "frame",
                               "id": "apXaR",
                               "name": "佔標的資產或單位數比重(%) row 2 cell",
-                              "width": 120,
+                              "width": 115,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -3521,7 +3713,7 @@
                               "type": "frame",
                               "id": "OssGM",
                               "name": "標的名稱 row 3 cell",
-                              "width": 155,
+                              "width": 135,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -3587,7 +3779,7 @@
                               "type": "frame",
                               "id": "YS4mT",
                               "name": "類型別 row 3 cell",
-                              "width": 100,
+                              "width": 90,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -3686,9 +3878,41 @@
                             },
                             {
                               "type": "frame",
+                              "id": "vz4tS",
+                              "name": "幣別 row 3 cell",
+                              "width": 70,
+                              "height": "fill_container",
+                              "fill": "#FFFFFF",
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": {
+                                "right": 1,
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                0,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "MvbWK",
+                                  "name": "幣別 row 3 text",
+                                  "fill": "#4F46E5",
+                                  "content": "USD",
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
                               "id": "ORgdR",
                               "name": "持有市值（標的幣別） row 3 cell",
-                              "width": 137,
+                              "width": 127,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -3722,7 +3946,7 @@
                               "type": "frame",
                               "id": "V1DMM9",
                               "name": "標的發行規模（標的幣別）或流通股數 row 3 cell",
-                              "width": 160,
+                              "width": 140,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -3756,7 +3980,7 @@
                               "type": "frame",
                               "id": "v7dvr3",
                               "name": "佔淨資產比重(%) row 3 cell",
-                              "width": 110,
+                              "width": 105,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -3790,7 +4014,7 @@
                               "type": "frame",
                               "id": "B46lZY",
                               "name": "佔標的資產或單位數比重(%) row 3 cell",
-                              "width": 120,
+                              "width": 115,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -3933,7 +4157,7 @@
                               "type": "frame",
                               "id": "kNMnC",
                               "name": "標的名稱 row 4 cell",
-                              "width": 155,
+                              "width": 135,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -3999,7 +4223,7 @@
                               "type": "frame",
                               "id": "woiR3",
                               "name": "類型別 row 4 cell",
-                              "width": 100,
+                              "width": 90,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -4098,9 +4322,41 @@
                             },
                             {
                               "type": "frame",
+                              "id": "sIzQi",
+                              "name": "幣別 row 4 cell",
+                              "width": 70,
+                              "height": "fill_container",
+                              "fill": "#F8FAFC",
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": {
+                                "right": 1,
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                0,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "B5rWkG",
+                                  "name": "幣別 row 4 text",
+                                  "fill": "#4F46E5",
+                                  "content": "USD",
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
                               "id": "Hv7aw",
                               "name": "持有市值（標的幣別） row 4 cell",
-                              "width": 137,
+                              "width": 127,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -4134,7 +4390,7 @@
                               "type": "frame",
                               "id": "xEDev",
                               "name": "標的發行規模（標的幣別）或流通股數 row 4 cell",
-                              "width": 160,
+                              "width": 140,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -4168,7 +4424,7 @@
                               "type": "frame",
                               "id": "Arq6T",
                               "name": "佔淨資產比重(%) row 4 cell",
-                              "width": 110,
+                              "width": 105,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -4202,7 +4458,7 @@
                               "type": "frame",
                               "id": "K2I5D",
                               "name": "佔標的資產或單位數比重(%) row 4 cell",
-                              "width": 120,
+                              "width": 115,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -4345,7 +4601,7 @@
                               "type": "frame",
                               "id": "P15bIE",
                               "name": "標的名稱 row 5 cell",
-                              "width": 155,
+                              "width": 135,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -4411,7 +4667,7 @@
                               "type": "frame",
                               "id": "jCJ9P",
                               "name": "類型別 row 5 cell",
-                              "width": 100,
+                              "width": 90,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -4510,9 +4766,41 @@
                             },
                             {
                               "type": "frame",
+                              "id": "i5rHz",
+                              "name": "幣別 row 5 cell",
+                              "width": 70,
+                              "height": "fill_container",
+                              "fill": "#FFFFFF",
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": {
+                                "right": 1,
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                0,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "qDpWj",
+                                  "name": "幣別 row 5 text",
+                                  "fill": "#4F46E5",
+                                  "content": "USD",
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
                               "id": "CIreU",
                               "name": "持有市值（標的幣別） row 5 cell",
-                              "width": 137,
+                              "width": 127,
                               "height": "fill_container",
                               "fill": "#FFFFFF",
                               "stroke": "#E2E8F0",
@@ -4546,7 +4834,7 @@
                               "type": "frame",
                               "id": "GeCR8",
                               "name": "標的發行規模（標的幣別）或流通股數 row 5 cell",
-                              "width": 160,
+                              "width": 140,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -4580,7 +4868,7 @@
                               "type": "frame",
                               "id": "odmyO",
                               "name": "佔淨資產比重(%) row 5 cell",
-                              "width": 110,
+                              "width": 105,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",
@@ -4614,7 +4902,7 @@
                               "type": "frame",
                               "id": "j0ckLs",
                               "name": "佔標的資產或單位數比重(%) row 5 cell",
-                              "width": 120,
+                              "width": 115,
                               "height": "fill_container",
                               "fill": "#F8FAFC",
                               "stroke": "#E2E8F0",

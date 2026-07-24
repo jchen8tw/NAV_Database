@@ -1,10 +1,12 @@
 from pathlib import Path
 import polars as pl
 from dash import Dash, Input, Output, State, dash_table, dcc, html
+from dash.exceptions import PreventUpdate
 
 from src.pages import daily, history, upload
 from src.database import (
     ASSET_RATIO_COLUMN,
+    CURRENCY_COLUMN,
     DATE_COLUMN,
     ISSUE_SIZE_COLUMN,
     NAV_RATIO_COLUMN,
@@ -32,7 +34,7 @@ def make_table(
     numeric_columns = set(NUMERIC_COLUMNS)
     columns = [
         {
-            "name": name,
+            "name": "幣別" if name == CURRENCY_COLUMN else name,
             "id": name,
             "type": "numeric" if name in numeric_columns else "text",
         }
@@ -182,12 +184,29 @@ def render_page(pathname: str | None):
 
 @app.callback(
     Output("daily-table-container", "children"),
+    Output("daily-export-button", "disabled"),
     Input("daily-date-picker", "date"),
 )
 def update_daily_table(report_date: str | None):
-    return daily.make_table_content(
-        load_holdings_by_date(report_date), report_date, make_table
+    holdings = load_holdings_by_date(report_date)
+    return (
+        daily.make_table_content(holdings, report_date, make_table),
+        holdings.is_empty(),
     )
+
+
+@app.callback(
+    Output("daily-csv-download", "data"),
+    Input("daily-export-button", "n_clicks"),
+    State("daily-holdings-table", "derived_virtual_data"),
+    State("daily-holdings-table", "columns"),
+    State("daily-date-picker", "date"),
+    prevent_initial_call=True,
+)
+def download_daily_csv(n_clicks, rows, columns, report_date):
+    if not n_clicks or not report_date:
+        raise PreventUpdate
+    return daily.make_csv_download(rows, columns, report_date)
 
 
 @app.callback(
