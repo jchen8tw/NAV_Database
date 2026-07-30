@@ -60,6 +60,14 @@ class ExtractedWorkbook:
     error: str | None = None
 
 
+@dataclass(frozen=True)
+class ParsedWorkbook:
+    """Canonical holdings together with the detected custodian format."""
+
+    dataframe: pl.DataFrame
+    format: str
+
+
 def decode_upload(contents: str) -> bytes:
     """Decode a Dash data URL into its original bytes."""
     try:
@@ -71,11 +79,21 @@ def decode_upload(contents: str) -> bytes:
 
 def parse_excel(contents: str) -> pl.DataFrame:
     """Decode all recognized holdings worksheets into the canonical schema."""
-    return parse_excel_bytes(decode_upload(contents))
+    return parse_excel_result(contents).dataframe
 
 
 def parse_excel_bytes(contents: bytes) -> pl.DataFrame:
     """Parse workbook bytes without writing them to disk."""
+    return parse_excel_bytes_result(contents).dataframe
+
+
+def parse_excel_result(contents: str) -> ParsedWorkbook:
+    """Decode a Dash upload and return its canonical data and detected format."""
+    return parse_excel_bytes_result(decode_upload(contents))
+
+
+def parse_excel_bytes_result(contents: bytes) -> ParsedWorkbook:
+    """Parse workbook bytes and return canonical data plus its single format."""
     workbook = BytesIO(contents)
 
     sheets = pl.read_excel(
@@ -91,24 +109,39 @@ def parse_excel_bytes(contents: bytes) -> pl.DataFrame:
         sheets = {"Sheet1": sheets}
 
     holdings = []
+    formats = set()
     errors = []
     for sheet_name, worksheet in sheets.items():
         if worksheet.is_empty():
             continue
+        detected_format = _detect_sheet_format(worksheet)
+        if detected_format:
+            formats.add(detected_format)
         try:
-            parsed = _parse_sheet(worksheet, sheet_name)
+            parsed, workbook_format = _parse_sheet_with_format(
+                worksheet, sheet_name
+            )
         except ValueError as exc:
             errors.append(str(exc))
             continue
         if parsed is not None and not parsed.is_empty():
             holdings.append(parsed)
+            formats.add(workbook_format)
 
     if not holdings:
         detail = f" ({errors[0]})" if errors else ""
         raise ValueError(
             f"The workbook does not contain a recognized holdings table.{detail}"
         )
-    return pl.concat(holdings, how="vertical_relaxed")
+    if len(formats) != 1:
+        raise ValueError(
+            "The workbook mixes 國泰世華 and 中信 formats; split it into "
+            "separate workbooks before uploading."
+        )
+    return ParsedWorkbook(
+        pl.concat(holdings, how="vertical_relaxed"),
+        formats.pop(),
+    )
 
 
 def extract_msg_workbooks(contents: bytes) -> list[ExtractedWorkbook]:
@@ -218,6 +251,12 @@ def _read_archive_workbooks(
 
 
 def _parse_sheet(worksheet: pl.DataFrame, sheet_name: str) -> pl.DataFrame | None:
+    return _parse_sheet_with_format(worksheet, sheet_name)[0]
+
+
+def _parse_sheet_with_format(
+    worksheet: pl.DataFrame, sheet_name: str
+) -> tuple[pl.DataFrame | None, str]:
     rows = list(worksheet.iter_rows())
     for header_index, row in enumerate(rows):
         headers = [_clean_header(value) for value in row]
@@ -226,11 +265,32 @@ def _parse_sheet(worksheet: pl.DataFrame, sheet_name: str) -> pl.DataFrame | Non
             and set(SECOND_FORMAT_COLUMNS.values()).issubset(headers)
             and _find_market_value_header(headers) is not None
         ):
-            return _parse_second_format(worksheet, sheet_name, header_index, headers)
+            return (
+                _parse_second_format(worksheet, sheet_name, header_index, headers),
+                "ctbc",
+            )
         if "ISIN" in headers:
-            return _parse_original_format(worksheet, header_index, headers)
+            return (
+                _parse_original_format(worksheet, header_index, headers),
+                "cathay",
+            )
     if any(DATE_COLUMN in [_clean_header(value).replace("：", "").replace(":", "") for value in row] for row in rows[:12]):
         find_metadata_value(worksheet, ACCOUNT_CODE_COLUMN)
+    return None, ""
+
+
+def _detect_sheet_format(worksheet: pl.DataFrame) -> str | None:
+    """Recognize a sheet's format from its header signature only."""
+    for row in worksheet.iter_rows():
+        headers = [_clean_header(value) for value in row]
+        if (
+            "ISIN CODE" in headers
+            and set(SECOND_FORMAT_COLUMNS.values()).issubset(headers)
+            and _find_market_value_header(headers) is not None
+        ):
+            return "ctbc"
+        if "ISIN" in headers:
+            return "cathay"
     return None
 
 

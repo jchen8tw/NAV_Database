@@ -122,6 +122,38 @@ class WorkbookParsingTests(unittest.TestCase):
             reader.parse_excel_bytes(b"workbook")
         self.assertEqual(read_excel.call_args.args[0].read(), b"workbook")
 
+    def test_format_aware_result_and_mixed_workbook_rejection(self):
+        sheet = pl.DataFrame([["data"]], orient="row")
+        canonical = pl.DataFrame(
+            {database.DATE_COLUMN: ["2026-07-30"], "ISIN": ["F1"]}
+        )
+        with (
+            patch(
+                "src.reader.pl.read_excel",
+                return_value={"one": sheet},
+            ),
+            patch(
+                "src.reader._parse_sheet_with_format",
+                return_value=(canonical, "ctbc"),
+            ),
+        ):
+            result = reader.parse_excel_bytes_result(b"book")
+        self.assertEqual(result.format, "ctbc")
+        self.assertTrue(result.dataframe.equals(canonical))
+
+        with (
+            patch(
+                "src.reader.pl.read_excel",
+                return_value={"one": sheet, "two": sheet},
+            ),
+            patch(
+                "src.reader._parse_sheet_with_format",
+                side_effect=[(canonical, "cathay"), (canonical, "ctbc")],
+            ),
+            self.assertRaisesRegex(ValueError, "mixes 國泰世華 and 中信"),
+        ):
+            reader.parse_excel_bytes_result(b"mixed")
+
     def test_parse_supplied_legacy_workbook(self):
         contents = "data:application/vnd.ms-excel;base64," + base64.b64encode(
             (Path("sample") / "越權檢核115-07-08.xls").read_bytes()
@@ -477,9 +509,18 @@ class PresentationTests(unittest.TestCase):
         self.assertIn("請將保管銀行的越權報表上傳，支援世華銀行與中信銀行格式", upload_copy)
         self.assertIn("將 Excel 或 Outlook 訊息檔拖曳到這裡", upload_copy)
         self.assertIn("或點擊選擇報表檔案（可一次選取多個）", upload_copy)
-        uploader = upload.layout().children[1]
+        uploader = find_component(upload.layout(), "excel-upload")
         self.assertTrue(uploader.multiple)
         self.assertEqual(uploader.accept, ".xlsx,.xls,.msg")
+        modal = find_component(upload.layout(), "upload-confirmation-modal")
+        self.assertIsNotNone(modal)
+        self.assertIn("確認上傳檔案", text_content(modal))
+        self.assertIn("套用日期至已選檔案", text_content(modal))
+        self.assertIn("確認上傳", text_content(modal))
+        self.assertIsNotNone(find_component(modal, "upload-staging-grid"))
+        self.assertIsNotNone(find_component(modal, "upload-batch-date"))
+        self.assertTrue(find_component(modal, "upload-confirm-button").disabled)
+        self.assertIsNotNone(find_component(upload.layout(), "upload-staging-store"))
 
         daily_copy = text_content(daily.layout([], lambda _: pl.DataFrame(), main.make_table))
         self.assertIn("單日的所有基金與全委帳戶的資料", daily_copy)
@@ -715,63 +756,65 @@ class PresentationTests(unittest.TestCase):
         self.assertFalse(account_figure.layout.yaxis.automargin)
         self.assertEqual(total, "總計 15.000")
 
-    def test_upload_callback_validates_input(self):
+    def test_previous_weekday_covers_monday_and_weekend_boundaries(self):
         self.assertEqual(
-            main.show_uploaded_workbooks(None, None),
-            ("未收到任何檔案。", "batch-status batch-status--error"),
+            main.previous_weekday(date(2026, 7, 30)), date(2026, 7, 29)
         )
-        message, class_name = main.show_uploaded_workbooks(
-            ["data:text/plain;base64,eA=="], ["report.txt"]
+        self.assertEqual(
+            main.previous_weekday(date(2026, 8, 3)), date(2026, 7, 31)
         )
-        self.assertEqual(class_name, "batch-status batch-status--mixed")
-        self.assertIn("1 個失敗", " ".join(text_content(message)))
-        status_table = message.children[1]
-        self.assertEqual(status_table.rowData[0]["status"], "失敗")
-        self.assertIn(".xlsx", status_table.rowData[0]["detail"])
+        self.assertEqual(
+            main.previous_weekday(date(2026, 8, 2)), date(2026, 7, 31)
+        )
+        self.assertEqual(
+            main.previous_weekday(date(2026, 8, 1)), date(2026, 7, 31)
+        )
 
-    def test_upload_callback_processes_each_workbook_independently(self):
-        frames = [
-            pl.DataFrame({database.DATE_COLUMN: ["2025-01-01"], "ISIN": ["F1"]}),
-            pl.DataFrame({database.DATE_COLUMN: ["2025-01-02"], "ISIN": ["F2"]}),
-        ]
+    def test_staging_classifies_dates_and_never_stores(self):
+        cathay = reader.ParsedWorkbook(
+            pl.DataFrame({database.DATE_COLUMN: ["2026-08-03"]}), "cathay"
+        )
+        ctbc = reader.ParsedWorkbook(
+            pl.DataFrame({database.DATE_COLUMN: ["2026-08-02"]}), "ctbc"
+        )
         with (
-            patch("main.parse_excel", side_effect=[frames[0], ValueError("bad workbook"), frames[1]]),
-            patch("main.store_dataframe", side_effect=[1, 2]) as store,
+            patch(
+                "main.parse_excel_result",
+                side_effect=[cathay, ctbc, ValueError("bad workbook")],
+            ),
+            patch("main.store_dataframe") as store,
         ):
-            result, class_name = main.show_uploaded_workbooks(
-                ["one", "bad", "two"], ["one.xlsx", "bad.xlsx", "two.xls"]
+            staging = main.stage_uploaded_workbooks(
+                ["one", "two", "bad"],
+                ["cathay.xlsx", "ctbc.xls", "bad.xlsx"],
             )
-
-        self.assertEqual(class_name, "batch-status batch-status--mixed")
-        self.assertEqual(store.call_count, 2)
-        self.assertIn("2 個完成 · 1 個失敗", " ".join(text_content(result)))
+        store.assert_not_called()
         self.assertEqual(
-            [row["status"] for row in result.children[1].rowData],
-            ["完成", "失敗", "完成"],
+            [row["format_label"] for row in staging["rows"]],
+            ["國泰世華", "中信", "無法辨識"],
         )
-        status_table = result.children[1]
-        self.assertIsInstance(status_table, dag.AgGrid)
-        self.assertEqual(status_table.dashGridOptions["paginationPageSize"], 6)
-        self.assertEqual([column["flex"] for column in status_table.columnDefs], [4, 1.2, 4.8])
-        status_style = status_table.columnDefs[1]["cellStyle"]
         self.assertEqual(
-            status_style["styleConditions"][0]["style"]["color"], "#166534"
+            [row["date"] for row in staging["rows"]],
+            ["2026-07-31", "2026-08-02", None],
+        )
+        self.assertFalse(staging["rows"][2]["valid"])
+        self.assertEqual(
+            [row["id"] for row in staging["rows"]],
+            [
+                "upload-0-report-0",
+                "upload-1-report-0",
+                "upload-2-report-0",
+            ],
         )
 
-    def test_upload_callback_processes_msg_workbooks_independently(self):
-        frames = [
-            pl.DataFrame({database.DATE_COLUMN: ["2026-06-26"], "ISIN": ["F1"]}),
-            pl.DataFrame({database.DATE_COLUMN: ["2026-06-26"], "ISIN": ["F2"]}),
-        ]
+    def test_staging_expands_msg_and_exposes_invalid_rows(self):
         reports = [
             reader.ExtractedWorkbook(
                 "國壽越權報表.zip › DC029_20260626.xlsx", b"one"
             ),
             reader.ExtractedWorkbook(
-                "國壽越權報表.zip › DC030_20260626.xlsx", b"bad"
-            ),
-            reader.ExtractedWorkbook(
-                "國壽越權報表.zip › DC031_20260626.xlsx", b"two"
+                "國壽越權報表.zip › DC030_20260626.xlsx",
+                error="broken attachment",
             ),
         ]
         upload_data = "data:application/octet-stream;base64," + base64.b64encode(
@@ -780,26 +823,156 @@ class PresentationTests(unittest.TestCase):
         with (
             patch("main.extract_msg_workbooks", return_value=reports),
             patch(
-                "main.parse_excel_bytes",
-                side_effect=[frames[0], ValueError("bad workbook"), frames[1]],
+                "main.parse_excel_bytes_result",
+                return_value=reader.ParsedWorkbook(
+                    pl.DataFrame({database.DATE_COLUMN: ["2025-01-01"]}),
+                    "cathay",
+                ),
             ),
-            patch("main.store_dataframe", side_effect=[1, 2]) as store,
+            patch("main.store_dataframe") as store,
         ):
-            result, class_name = main.show_uploaded_workbooks(
+            staging = main.stage_uploaded_workbooks(
                 [upload_data], ["message.msg"]
             )
-
-        self.assertEqual(class_name, "batch-status batch-status--mixed")
-        self.assertEqual(store.call_count, 2)
+        store.assert_not_called()
         self.assertEqual(
-            [row["filename"] for row in result.children[1].rowData],
+            [row["filename"] for row in staging["rows"]],
             [
                 "message.msg › DC029_20260626.xlsx",
                 "message.msg › DC030_20260626.xlsx",
-                "message.msg › DC031_20260626.xlsx",
             ],
         )
-        self.assertIn("3 個報表檔案", " ".join(text_content(result)))
+        self.assertTrue(staging["rows"][0]["valid"])
+        self.assertFalse(staging["rows"][1]["valid"])
+
+    def test_upload_modal_initially_selects_every_valid_file(self):
+        valid = reader.ParsedWorkbook(
+            pl.DataFrame({database.DATE_COLUMN: ["2025-01-01"]}), "ctbc"
+        )
+        with patch(
+            "main.parse_excel_result",
+            side_effect=[valid, ValueError("invalid"), valid],
+        ):
+            result = main.show_uploaded_workbooks(
+                ["one", "bad", "two"],
+                ["one.xlsx", "bad.xlsx", "two.xlsx"],
+            )
+
+        selected_rows = result[2]
+        self.assertEqual(
+            [row["filename"] for row in selected_rows],
+            ["one.xlsx", "two.xlsx"],
+        )
+        self.assertTrue(all(row["valid"] for row in selected_rows))
+
+    def test_selection_and_mixed_date_editing_only_updates_targets(self):
+        staging = {
+            "rows": [
+                {
+                    "id": "one",
+                    "valid": True,
+                    "date": "2026-07-29",
+                    "display_date": "2026/07/29",
+                },
+                {
+                    "id": "two",
+                    "valid": True,
+                    "date": "2026-07-30",
+                    "display_date": "2026/07/30",
+                },
+                {
+                    "id": "three",
+                    "valid": True,
+                    "date": "2026-07-30",
+                    "display_date": "2026/07/30",
+                },
+            ]
+        }
+        selected = [staging["rows"][0], staging["rows"][1]]
+        picker_date, help_text = main.selected_date_state(selected)
+        self.assertIsNone(picker_date)
+        self.assertIn("不同日期", help_text)
+
+        updated = main.apply_date_to_selected(
+            staging, selected, "2026-08-01"
+        )
+        self.assertEqual(
+            [row["date"] for row in updated["rows"]],
+            ["2026-08-01", "2026-08-01", "2026-07-30"],
+        )
+        self.assertEqual(
+            main.selected_date_state([updated["rows"][0]]),
+            ("2026-08-01", "已選取 1 個檔案"),
+        )
+
+    def test_confirmation_overrides_dates_and_isolates_failures(self):
+        staging = {
+            "rows": [
+                {
+                    "id": "one",
+                    "filename": "one.xlsx",
+                    "valid": True,
+                    "date": "2026-07-29",
+                    "source_kind": "upload",
+                    "source_contents": "one",
+                },
+                {
+                    "id": "bad",
+                    "filename": "bad.xlsx",
+                    "valid": True,
+                    "date": "2026-07-30",
+                    "source_kind": "upload",
+                    "source_contents": "bad",
+                },
+                {
+                    "id": "invalid",
+                    "filename": "invalid.xlsx",
+                    "valid": False,
+                    "date": None,
+                    "error": "invalid format",
+                    "source_kind": "upload",
+                    "source_contents": "invalid",
+                },
+            ]
+        }
+        frame = pl.DataFrame(
+            {database.DATE_COLUMN: ["2025-01-01"], "ISIN": ["F1"]}
+        )
+        with (
+            patch(
+                "main.parse_excel_result",
+                side_effect=[
+                    reader.ParsedWorkbook(frame, "cathay"),
+                    ValueError("parse failed"),
+                ],
+            ),
+            patch("main.store_dataframe", return_value=1) as store,
+        ):
+            result, class_name = main.confirm_staged_workbooks(staging)
+        self.assertEqual(store.call_count, 1)
+        self.assertEqual(
+            store.call_args.args[0][database.DATE_COLUMN].to_list(),
+            ["2026-07-29"],
+        )
+        self.assertEqual(class_name, "batch-status batch-status--mixed")
+        self.assertEqual(
+            [row["status"] for row in result.children[1].rowData],
+            ["完成", "失敗", "失敗"],
+        )
+        self.assertIn("1 個完成 · 2 個失敗", " ".join(text_content(result)))
+
+    def test_cancel_clears_staging_without_database_writes(self):
+        with (
+            patch("main.ctx", MagicMock(triggered_id="upload-cancel-button")),
+            patch("main.store_dataframe") as store,
+        ):
+            result = main.finish_upload(
+                1, 0, {"rows": [{"valid": True}]}
+            )
+        store.assert_not_called()
+        self.assertEqual(result[0], "upload-modal")
+        self.assertEqual(result[1], {"rows": []})
+        self.assertIsNone(result[4])
 
 
 

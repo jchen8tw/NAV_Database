@@ -1,7 +1,9 @@
+import base64
+from datetime import date, timedelta
 from pathlib import Path
 import polars as pl
 import dash_ag_grid as dag
-from dash import Dash, Input, Output, State, dcc, html
+from dash import Dash, Input, Output, State, ctx, dcc, html, no_update
 from dash.exceptions import PreventUpdate
 
 from src.pages import daily, history, upload
@@ -22,6 +24,8 @@ from src.reader import (
     extract_msg_workbooks,
     parse_excel,
     parse_excel_bytes,
+    parse_excel_bytes_result,
+    parse_excel_result,
 )
 
 NUMERIC_COLUMNS = (
@@ -33,6 +37,7 @@ NUMERIC_COLUMNS = (
     NAV_RATIO_COLUMN,
     ASSET_RATIO_COLUMN,
 )
+FORMAT_LABELS = {"cathay": "國泰世華", "ctbc": "中信"}
 
 
 def make_table(
@@ -319,89 +324,202 @@ def update_history_figure(mode, selection, metric, start, end):
     )
 
 
-@app.callback(
-    Output("upload-status", "children"),
-    Output("upload-status", "className"),
-    Input("excel-upload", "contents"),
-    State("excel-upload", "filename"),
-    prevent_initial_call=True,
-)
-def show_uploaded_workbooks(
-    contents: list[str] | None, filenames: list[str] | None
-):
+def previous_weekday(value: date) -> date:
+    """Return the nearest Monday-Friday date strictly before value."""
+    candidate = value - timedelta(days=1)
+    while candidate.weekday() >= 5:
+        candidate -= timedelta(days=1)
+    return candidate
+
+
+def _display_date(value: str | None) -> str:
+    return value.replace("-", "/") if value else "—"
+
+
+def _grid_rows(staging: dict | None) -> list[dict]:
+    return [
+        {
+            key: value
+            for key, value in row.items()
+            if key not in {"source_contents", "source_kind"}
+        }
+        for row in (staging or {}).get("rows", [])
+    ]
+
+
+def stage_uploaded_workbooks(
+    contents: list[str] | None,
+    filenames: list[str] | None,
+) -> dict:
+    """Inspect uploads and build JSON-safe rows without writing to storage."""
     if not contents:
-        return "未收到任何檔案。", "batch-status batch-status--error"
+        return {"rows": []}
 
     filenames = filenames or []
+    rows: list[dict] = []
 
-    rows: list[dict[str, str]] = []
-    completed = 0
-    imported_rows = 0
-    for index, file_contents in enumerate(contents):
-        filename = filenames[index] if index < len(filenames) else f"檔案 {index + 1}"
+    def add_row(
+        upload_index: int,
+        report_index: int,
+        filename: str,
+        source_kind: str,
+        source_contents: str,
+        parsed=None,
+        error: str | None = None,
+    ) -> None:
+        workbook_format = parsed.format if parsed is not None else None
+        parsed_date = (
+            date.fromisoformat(parsed.dataframe[DATE_COLUMN].item(0))
+            if parsed is not None
+            else None
+        )
+        assigned_date = (
+            previous_weekday(parsed_date).isoformat()
+            if workbook_format == "cathay"
+            else parsed_date.isoformat()
+            if workbook_format == "ctbc"
+            else None
+        )
+        rows.append(
+            {
+                "id": f"upload-{upload_index}-report-{report_index}",
+                "filename": filename,
+                "format": workbook_format,
+                "format_label": FORMAT_LABELS.get(
+                    workbook_format, "無法辨識"
+                ),
+                "date": assigned_date,
+                "display_date": _display_date(assigned_date),
+                "valid": parsed is not None and error is None,
+                "error": error or "",
+                "upload_index": upload_index,
+                "report_index": report_index,
+                "source_kind": source_kind,
+                "source_contents": source_contents,
+            }
+        )
+
+    for upload_index, file_contents in enumerate(contents):
+        filename = (
+            filenames[upload_index]
+            if upload_index < len(filenames)
+            else f"檔案 {upload_index + 1}"
+        )
         suffix = Path(filename).suffix.lower()
         if suffix not in {".xlsx", ".xls", ".msg"}:
-            rows.append(
-                {
-                    "filename": filename,
-                    "status": "失敗",
-                    "detail": "不支援的格式；請上傳 .xlsx、.xls 或 .msg",
-                }
+            add_row(
+                upload_index,
+                0,
+                filename,
+                "upload",
+                file_contents,
+                error="不支援的格式；請上傳 .xlsx、.xls 或 .msg",
             )
             continue
 
-        if suffix == ".msg":
+        if suffix != ".msg":
             try:
-                reports = extract_msg_workbooks(decode_upload(file_contents))
+                parsed = parse_excel_result(file_contents)
             except Exception as exc:
-                reports = [ExtractedWorkbook(filename, error=str(exc))]
-        else:
-            reports = [ExtractedWorkbook(filename)]
+                add_row(
+                    upload_index,
+                    0,
+                    filename,
+                    "upload",
+                    file_contents,
+                    error=str(exc),
+                )
+            else:
+                add_row(
+                    upload_index,
+                    0,
+                    filename,
+                    "upload",
+                    file_contents,
+                    parsed=parsed,
+                )
+            continue
 
-        for report in reports:
-            if report.error:
-                report_label = (
-                    f"{filename} › {report.label}"
-                    if report.label != filename
-                    else filename
-                )
-                rows.append(
-                    {
-                        "filename": report_label,
-                        "status": "失敗",
-                        "detail": report.error,
-                    }
-                )
-                continue
+        try:
+            reports = extract_msg_workbooks(decode_upload(file_contents))
+        except Exception as exc:
+            reports = [ExtractedWorkbook(filename, error=str(exc))]
+        for report_index, report in enumerate(reports):
             label = (
                 filename
-                if suffix != ".msg"
+                if report.label == filename
                 else f"{filename} › {report.label.split(' › ', 1)[-1]}"
             )
-            try:
-                df = (
-                    parse_excel(file_contents)
-                    if suffix != ".msg"
-                    else parse_excel_bytes(report.contents or b"")
-                )
-                store_dataframe(df)
-            except Exception as exc:
-                rows.append({"filename": label, "status": "失敗", "detail": str(exc)})
-                continue
-
-            completed += 1
-            imported_rows += df.height
-            rows.append(
-                {
-                    "filename": label,
-                    "status": "完成",
-                    "detail": (
-                        f"{df.height:,} 列 · {df.width:,} 欄 · "
-                        f"資料日期 {df.get_column(DATE_COLUMN).item(0)}"
-                    ),
-                }
+            encoded = (
+                base64.b64encode(report.contents).decode()
+                if report.contents is not None
+                else ""
             )
+            if report.error:
+                add_row(
+                    upload_index,
+                    report_index,
+                    label,
+                    "bytes",
+                    encoded,
+                    error=report.error,
+                )
+                continue
+            try:
+                parsed = parse_excel_bytes_result(report.contents or b"")
+            except Exception as exc:
+                add_row(
+                    upload_index,
+                    report_index,
+                    label,
+                    "bytes",
+                    encoded,
+                    error=str(exc),
+                )
+            else:
+                add_row(
+                    upload_index,
+                    report_index,
+                    label,
+                    "bytes",
+                    encoded,
+                    parsed=parsed,
+                )
+    return {"rows": rows}
 
+
+def selected_date_state(
+    selected_rows: list[dict] | None,
+) -> tuple[str | None, str]:
+    valid_rows = [row for row in (selected_rows or []) if row.get("valid")]
+    if not valid_rows:
+        return None, "請先勾選要批次設定日期的檔案"
+    dates = {row.get("date") for row in valid_rows}
+    if len(dates) > 1:
+        return None, f"已選取 {len(valid_rows)} 個檔案，目前包含不同日期"
+    return dates.pop(), f"已選取 {len(valid_rows)} 個檔案"
+
+
+def apply_date_to_selected(
+    staging: dict | None,
+    selected_rows: list[dict] | None,
+    selected_date: str | None,
+) -> dict:
+    if not staging or not selected_date:
+        return staging or {"rows": []}
+    selected_ids = {
+        row["id"] for row in (selected_rows or []) if row.get("valid")
+    }
+    for row in staging.get("rows", []):
+        if row["id"] in selected_ids and row.get("valid"):
+            row["date"] = selected_date
+            row["display_date"] = _display_date(selected_date)
+    return staging
+
+
+def _make_upload_result(rows: list[dict[str, str]]) -> tuple[html.Section, str]:
+    completed = sum(row["status"] == "完成" for row in rows)
+    imported_rows = sum(row.get("imported_rows", 0) for row in rows)
     failed = len(rows) - completed
     status = html.Section(
         [
@@ -433,6 +551,183 @@ def show_uploaded_workbooks(
     )
     modifier = "batch-status--success" if not failed else "batch-status--mixed"
     return status, f"batch-status {modifier}"
+
+
+def confirm_staged_workbooks(staging: dict | None):
+    """Reparse and independently store every valid staged workbook."""
+    rows: list[dict] = []
+    for staged in (staging or {}).get("rows", []):
+        if not staged.get("valid"):
+            rows.append(
+                {
+                    "filename": staged["filename"],
+                    "status": "失敗",
+                    "detail": staged.get("error") or "檔案格式無效",
+                    "imported_rows": 0,
+                }
+            )
+            continue
+        try:
+            if staged["source_kind"] == "upload":
+                parsed = parse_excel_result(staged["source_contents"])
+            else:
+                parsed = parse_excel_bytes_result(
+                    base64.b64decode(staged["source_contents"])
+                )
+            dataframe = parsed.dataframe.with_columns(
+                pl.lit(staged["date"]).alias(DATE_COLUMN)
+            )
+            store_dataframe(dataframe)
+        except Exception as exc:
+            rows.append(
+                {
+                    "filename": staged["filename"],
+                    "status": "失敗",
+                    "detail": str(exc),
+                    "imported_rows": 0,
+                }
+            )
+            continue
+        rows.append(
+            {
+                "filename": staged["filename"],
+                "status": "完成",
+                "detail": (
+                    f"{dataframe.height:,} 列 · {dataframe.width:,} 欄 · "
+                    f"資料日期 {staged['date']}"
+                ),
+                "imported_rows": dataframe.height,
+            }
+        )
+    return _make_upload_result(rows)
+
+
+@app.callback(
+    Output("upload-staging-store", "data"),
+    Output("upload-staging-grid", "rowData"),
+    Output("upload-staging-grid", "selectedRows"),
+    Output("upload-confirmation-modal", "className"),
+    Output("upload-confirm-button", "disabled"),
+    Output("upload-staging-summary", "children"),
+    Output("upload-status", "children"),
+    Output("upload-status", "className"),
+    Input("excel-upload", "contents"),
+    State("excel-upload", "filename"),
+    prevent_initial_call=True,
+)
+def show_uploaded_workbooks(
+    contents: list[str] | None, filenames: list[str] | None
+):
+    if not contents:
+        return (
+            {"rows": []},
+            [],
+            [],
+            "upload-modal",
+            True,
+            "",
+            "未收到任何檔案。",
+            "batch-status batch-status--error",
+        )
+    staging = stage_uploaded_workbooks(contents, filenames)
+    grid_rows = _grid_rows(staging)
+    valid_rows = [row for row in grid_rows if row["valid"]]
+    invalid_count = len(grid_rows) - len(valid_rows)
+    summary = (
+        f"{len(valid_rows)} 個有效檔案將上傳"
+        + (f" · {invalid_count} 個檔案需修正" if invalid_count else "")
+    )
+    return (
+        staging,
+        grid_rows,
+        valid_rows,
+        "upload-modal upload-modal--open",
+        not valid_rows,
+        summary,
+        "",
+        "batch-status",
+    )
+
+
+@app.callback(
+    Output("upload-batch-date", "date"),
+    Output("upload-date-help", "children"),
+    Input("upload-staging-grid", "selectedRows"),
+    prevent_initial_call=True,
+)
+def update_staged_selection(selected_rows):
+    return selected_date_state(selected_rows)
+
+
+@app.callback(
+    Output("upload-staging-store", "data", allow_duplicate=True),
+    Output("upload-staging-grid", "rowData", allow_duplicate=True),
+    Input("upload-batch-date", "date"),
+    State("upload-staging-grid", "selectedRows"),
+    State("upload-staging-store", "data"),
+    prevent_initial_call=True,
+)
+def update_staged_dates(selected_date, selected_rows, staging):
+    updated = apply_date_to_selected(staging, selected_rows, selected_date)
+    return updated, _grid_rows(updated)
+
+
+@app.callback(
+    Output("upload-confirmation-modal", "className", allow_duplicate=True),
+    Output("upload-staging-store", "data", allow_duplicate=True),
+    Output("upload-staging-grid", "rowData", allow_duplicate=True),
+    Output("upload-staging-grid", "selectedRows", allow_duplicate=True),
+    Output("excel-upload", "contents"),
+    Output("excel-upload", "filename"),
+    Output("upload-status", "children", allow_duplicate=True),
+    Output("upload-status", "className", allow_duplicate=True),
+    Output("upload-modal-error", "children"),
+    Input("upload-cancel-button", "n_clicks"),
+    Input("upload-confirm-button", "n_clicks"),
+    State("upload-staging-store", "data"),
+    prevent_initial_call=True,
+    running=[(Output("upload-confirm-button", "disabled"), True, False)],
+)
+def finish_upload(cancel_clicks, confirm_clicks, staging):
+    if ctx.triggered_id == "upload-cancel-button":
+        return (
+            "upload-modal",
+            {"rows": []},
+            [],
+            [],
+            None,
+            None,
+            "",
+            "batch-status",
+            "",
+        )
+    if ctx.triggered_id != "upload-confirm-button" or not confirm_clicks:
+        raise PreventUpdate
+    try:
+        status, class_name = confirm_staged_workbooks(staging)
+    except Exception as exc:
+        return (
+            "upload-modal upload-modal--open",
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            f"無法處理此批次：{exc}。請確認檔案後再試一次。",
+        )
+    return (
+        "upload-modal",
+        {"rows": []},
+        [],
+        [],
+        None,
+        None,
+        status,
+        class_name,
+        "",
+    )
 
 
 if __name__ == "__main__":
