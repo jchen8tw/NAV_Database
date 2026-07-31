@@ -21,6 +21,20 @@ UV_CACHE_DIR=/tmp/holdings-uv-cache uv run python -m unittest discover -v
 
 The temporary cache setting avoids local `uv` cache-permission issues.
 
+## Database location
+
+By default, the application stores its SQLite database at
+`<project-root>/nav_database.sqlite3`. The path is configured by the
+`DATABASE_PATH` constant near the top of `src/database.py`:
+
+```python
+DATABASE_PATH = Path(__file__).resolve().parent.parent / "nav_database.sqlite3"
+```
+
+Maintainers can change the database location by updating this constant. The
+current expression resolves the path relative to the project root, so it does
+not depend on the directory from which the application is started.
+
 Page-specific layouts and helpers are organized under `src/pages/` as
 `upload.py`, `daily.py`, and `history.py`.
 

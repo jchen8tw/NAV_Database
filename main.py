@@ -1,6 +1,9 @@
 import base64
 from datetime import date, timedelta
+import math
 from pathlib import Path
+from typing import Any
+
 import polars as pl
 import dash_ag_grid as dag
 from dash import Dash, Input, Output, State, ctx, dcc, html, no_update
@@ -8,14 +11,18 @@ from dash.exceptions import PreventUpdate
 
 from src.pages import daily, history, upload
 from src.database import (
+    ACCOUNT_CODE_COLUMN,
     ASSET_RATIO_COLUMN,
     CURRENCY_COLUMN,
+    DATABASE_PATH,
     DATE_COLUMN,
     ISSUE_SIZE_COLUMN,
+    NAV_COLUMN,
     NAV_RATIO_COLUMN,
     load_available_dates,
     load_holdings_by_date,
     load_holdings_history,
+    load_instrument_observations,
     store_dataframe,
 )
 from src.reader import (
@@ -30,7 +37,7 @@ from src.reader import (
 
 NUMERIC_COLUMNS = (
     "庫存單位數",
-    "基金淨值/ETF收盤價",
+    NAV_COLUMN,
     "持有市值(帳戶幣別)",
     "持有市值(標的幣別)",
     ISSUE_SIZE_COLUMN,
@@ -38,14 +45,18 @@ NUMERIC_COLUMNS = (
     ASSET_RATIO_COLUMN,
 )
 FORMAT_LABELS = {"cathay": "國泰世華", "ctbc": "中信"}
+NUMERIC_VALUE_FORMATTER = {
+    "function": "formatNumber(params.value)"
+}
 
 
 def make_table(
     df: pl.DataFrame, table_id: str = "holdings-table"
 ) -> dag.AgGrid:
     numeric_columns = set(NUMERIC_COLUMNS)
-    columns = [
-        {
+    columns = []
+    for name in df.columns:
+        column = {
             "headerName": "幣別" if name == CURRENCY_COLUMN else name,
             "field": name,
             "filter": (
@@ -55,8 +66,9 @@ def make_table(
             ),
             "tooltipField": name,
         }
-        for name in df.columns
-    ]
+        if name in numeric_columns:
+            column["valueFormatter"] = NUMERIC_VALUE_FORMATTER
+        columns.append(column)
 
     return dag.AgGrid(
         id=table_id,
@@ -341,10 +353,363 @@ def _grid_rows(staging: dict | None) -> list[dict]:
         {
             key: value
             for key, value in row.items()
-            if key not in {"source_contents", "source_kind"}
+            if key not in {"instrument_values", "source_contents", "source_kind"}
         }
         for row in (staging or {}).get("rows", [])
     ]
+
+
+def _comparison_value(value: Any) -> int | float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _instrument_values(dataframe: pl.DataFrame) -> list[dict[str, Any]]:
+    required = {"ISIN", NAV_COLUMN}
+    if not required.issubset(dataframe.columns):
+        return []
+    columns = [
+        "ISIN",
+        *(
+            [ACCOUNT_CODE_COLUMN]
+            if ACCOUNT_CODE_COLUMN in dataframe.columns
+            else []
+        ),
+        NAV_COLUMN,
+    ]
+    values = []
+    for row in dataframe.select(columns).iter_rows(named=True):
+        isin = str(row.get("ISIN") or "").strip()
+        if not isin:
+            continue
+        values.append(
+            {
+                "isin": isin,
+                "account": str(row.get(ACCOUNT_CODE_COLUMN) or "").strip(),
+                NAV_COLUMN: _comparison_value(row.get(NAV_COLUMN)),
+            }
+        )
+    return values
+
+
+def find_upload_conflicts(
+    staging: dict | None,
+    database_path: Path = DATABASE_PATH,
+    selected_ids: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Compare selected staged values with storage and the selected batch."""
+    incoming: list[dict[str, Any]] = []
+    keys: set[tuple[str, str]] = set()
+    for staged in (staging or {}).get("rows", []):
+        report_date = staged.get("date")
+        if (
+            not staged.get("valid")
+            or not report_date
+            or (
+                selected_ids is not None
+                and staged.get("id") not in selected_ids
+            )
+        ):
+            continue
+        for index, values in enumerate(staged.get("instrument_values", [])):
+            isin = str(values.get("isin") or "").strip()
+            if not isin:
+                continue
+            keys.add((isin, report_date))
+            # Only 基金淨值 is compared: 發行規模/流通股數 is ambiguous across sources.
+            value = _comparison_value(values.get(NAV_COLUMN))
+            if value is None:
+                continue
+            incoming.append(
+                {
+                    "observation_id": f"{staged['id']}:{index}:{NAV_COLUMN}",
+                    "source_id": staged["id"],
+                    "filename": staged["filename"],
+                    "isin": isin,
+                    "date": report_date,
+                    "account": str(values.get("account") or "").strip(),
+                    "field": NAV_COLUMN,
+                    "value": value,
+                }
+            )
+
+    stored = load_instrument_observations(keys, database_path)
+    by_key_field: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    for observation in incoming:
+        key = (
+            observation["isin"],
+            observation["date"],
+            observation["field"],
+        )
+        by_key_field.setdefault(key, []).append(observation)
+
+    stored_by_key_field: dict[
+        tuple[str, str, str], list[dict[str, Any]]
+    ] = {}
+    for observation in stored:
+        value = _comparison_value(observation.get(NAV_COLUMN))
+        if value is None:
+            continue
+        key = (
+            str(observation["ISIN"]),
+            str(observation[DATE_COLUMN]),
+            NAV_COLUMN,
+        )
+        stored_by_key_field.setdefault(key, []).append(
+            {
+                "value": value,
+                "account": str(
+                    observation.get(ACCOUNT_CODE_COLUMN) or ""
+                ).strip(),
+                "source": "database",
+            }
+        )
+
+    conflicts = []
+    for observation in incoming:
+        key = (
+            observation["isin"],
+            observation["date"],
+            observation["field"],
+        )
+        counterparts = [
+            candidate
+            for candidate in stored_by_key_field.get(key, [])
+            if candidate["value"] != observation["value"]
+        ]
+        counterparts.extend(
+            {
+                "value": candidate["value"],
+                "account": candidate["account"],
+                "source": candidate["filename"],
+            }
+            for candidate in by_key_field.get(key, [])
+            if candidate["observation_id"] != observation["observation_id"]
+            and candidate["value"] != observation["value"]
+        )
+        if not counterparts:
+            continue
+
+        distinct_counterparts = {
+            (
+                candidate["value"],
+                candidate["account"],
+                candidate["source"],
+            )
+            for candidate in counterparts
+        }
+        ordered = sorted(
+            distinct_counterparts,
+            key=lambda item: (str(item[0]), item[1], item[2]),
+        )
+        conflicts.append(
+            {
+                "id": observation["observation_id"],
+                "source_id": observation["source_id"],
+                "filename": observation["filename"],
+                "isin": observation["isin"],
+                "date": observation["date"],
+                "field": observation["field"],
+                "incoming_value": observation["value"],
+                "existing_values": list(dict.fromkeys(item[0] for item in ordered)),
+                "existing_accounts": list(
+                    dict.fromkeys(item[1] for item in ordered if item[1])
+                ),
+                "sources": list(
+                    dict.fromkeys(item[2] for item in ordered if item[2])
+                ),
+            }
+        )
+    return sorted(
+        conflicts,
+        key=lambda conflict: (
+            conflict["date"],
+            conflict["isin"],
+            conflict["field"],
+            conflict["filename"],
+        ),
+    )
+
+
+def refresh_staging_conflicts(
+    staging: dict | None,
+    database_path: Path = DATABASE_PATH,
+    selected_ids: set[str] | None = None,
+) -> dict:
+    staging = staging or {"rows": []}
+    staging["conflicts"] = find_upload_conflicts(
+        staging, database_path, selected_ids
+    )
+    return staging
+
+
+def _conflict_signature(conflicts: list[dict[str, Any]]) -> tuple:
+    return tuple(
+        (
+            conflict["id"],
+            conflict["date"],
+            conflict["incoming_value"],
+            tuple(conflict["existing_values"]),
+            tuple(conflict["existing_accounts"]),
+            tuple(conflict["sources"]),
+        )
+        for conflict in conflicts
+    )
+
+
+def conflict_source_ids(conflicts: list[dict[str, Any]] | None) -> set[str]:
+    """Return the staged file IDs represented by conflict records."""
+    source_ids = set()
+    for conflict in conflicts or []:
+        source_id = conflict.get("source_id")
+        if source_id:
+            source_ids.add(source_id)
+            continue
+        conflict_id = str(conflict.get("id") or "")
+        if conflict_id.count(":") >= 2:
+            source_ids.add(conflict_id.rsplit(":", 2)[0])
+    return source_ids
+
+
+def _format_conflict_value(value: int | float) -> str:
+    if isinstance(value, int):
+        return f"{value:,}"
+    return f"{value:,.12g}"
+
+
+def make_conflict_panel(conflicts: list[dict[str, Any]] | None):
+    conflicts = conflicts or []
+    if not conflicts:
+        return []
+    affected_isins = len({conflict["isin"] for conflict in conflicts})
+    rows = []
+    for conflict in conflicts:
+        existing = "、".join(
+            _format_conflict_value(value)
+            for value in conflict["existing_values"]
+        )
+        accounts = "、".join(conflict["existing_accounts"]) or "—"
+        rows.append(
+            html.Tr(
+                [
+                    html.Td(
+                        [
+                            html.Strong(conflict["isin"]),
+                            html.Small(
+                                f"{_display_date(conflict['date'])} · "
+                                f"{conflict['filename']}"
+                            ),
+                        ]
+                    ),
+                    html.Td(conflict["field"]),
+                    html.Td(
+                        _format_conflict_value(conflict["incoming_value"]),
+                        className="conflict-value conflict-value--incoming",
+                    ),
+                    html.Td(existing, className="conflict-value"),
+                    html.Td(accounts),
+                ]
+            )
+        )
+    return [
+        html.Div(
+            [
+                html.Div("!", className="upload-conflict-icon"),
+                html.Div(
+                    [
+                        html.Strong("偵測到資料不一致"),
+                        html.Span(
+                            "下列標的當日的基金淨值"
+                            "與資料庫或本批次其他檔案不同（空值不列入衝突）。"
+                        ),
+                        html.Span(
+                            "請勾選對應檔案調整套用日期或是取消本次上傳。"
+                        ),
+                    ],
+                    className="upload-conflict-copy",
+                ),
+                html.Span(
+                    f"{affected_isins} 標的 · {len(conflicts)} 項差異",
+                    className="upload-conflict-count",
+                ),
+            ],
+            className="upload-conflict-banner",
+        ),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.Strong("衝突資料"),
+                        html.Span("比對規則：同 ISIN ＋ 同資料日期"),
+                    ],
+                    className="upload-conflict-table-heading",
+                ),
+                html.Div(
+                    html.Table(
+                        [
+                            html.Thead(
+                                html.Tr(
+                                    [
+                                        html.Th("ISIN / 日期 / 檔案"),
+                                        html.Th("衝突欄位"),
+                                        html.Th("本次上傳值"),
+                                        html.Th("既有值"),
+                                        html.Th("既有專戶"),
+                                    ]
+                                )
+                            ),
+                            html.Tbody(rows),
+                        ]
+                    ),
+                    className="upload-conflict-table-scroll",
+                ),
+            ],
+            className="upload-conflict-details",
+        ),
+    ]
+
+
+def upload_staging_summary(staging: dict | None) -> str:
+    rows = (staging or {}).get("rows", [])
+    selected_ids = (
+        set(staging["selected_ids"])
+        if staging is not None and "selected_ids" in staging
+        else {row.get("id") for row in rows if row.get("valid")}
+    )
+    valid_count = sum(
+        bool(row.get("valid")) and row.get("id") in selected_ids
+        for row in rows
+    )
+    invalid_count = len(rows) - valid_count
+    conflicts = (staging or {}).get("conflicts", [])
+    affected_isins = len({conflict["isin"] for conflict in conflicts})
+    parts = []
+    processed_count = len((staging or {}).get("upload_results", []))
+    if (
+        (staging or {}).get("review_phase") == "conflict_review"
+        and processed_count
+    ):
+        parts.append(f"已處理 {processed_count} 個檔案")
+    parts.append(f"已選取 {valid_count} 個有效檔案")
+    if invalid_count:
+        remaining_valid = sum(bool(row.get("valid")) for row in rows) - valid_count
+        if remaining_valid:
+            parts.append(f"{remaining_valid} 個有效檔案未選取")
+        invalid_rows = sum(not row.get("valid") for row in rows)
+        if invalid_rows:
+            parts.append(f"{invalid_rows} 個檔案需修正")
+    if affected_isins:
+        parts.append(f"{affected_isins} 個 ISIN 有資料差異")
+    return " · ".join(parts)
 
 
 def stage_uploaded_workbooks(
@@ -396,6 +761,11 @@ def stage_uploaded_workbooks(
                 "report_index": report_index,
                 "source_kind": source_kind,
                 "source_contents": source_contents,
+                "instrument_values": (
+                    _instrument_values(parsed.dataframe)
+                    if parsed is not None
+                    else []
+                ),
             }
         )
 
@@ -485,7 +855,14 @@ def stage_uploaded_workbooks(
                     encoded,
                     parsed=parsed,
                 )
-    return {"rows": rows}
+    return {
+        "rows": rows,
+        "conflicts": [],
+        "review_phase": "confirmation",
+        "reviewed_selection": [],
+        "selected_ids": [row["id"] for row in rows if row.get("valid")],
+        "upload_results": [],
+    }
 
 
 def selected_date_state(
@@ -498,6 +875,38 @@ def selected_date_state(
     if len(dates) > 1:
         return None, f"已選取 {len(valid_rows)} 個檔案，目前包含不同日期"
     return dates.pop(), f"已選取 {len(valid_rows)} 個檔案"
+
+
+def selected_row_ids(selected_rows: list[dict] | None) -> set[str]:
+    return {
+        row["id"]
+        for row in (selected_rows or [])
+        if row.get("valid") and row.get("id")
+    }
+
+
+def update_staging_selection(
+    staging: dict | None,
+    selected_rows: list[dict] | None,
+) -> dict:
+    staging = staging or {"rows": []}
+    selected_ids = selected_row_ids(selected_rows)
+    previous_ids = set(staging.get("selected_ids", []))
+    staging["selected_ids"] = sorted(selected_ids)
+    if selected_ids != previous_ids:
+        staging["review_phase"] = "confirmation"
+        staging["reviewed_selection"] = []
+        staging["conflicts"] = []
+    return staging
+
+
+def selected_grid_rows(staging: dict | None) -> list[dict]:
+    selected_ids = set((staging or {}).get("selected_ids", []))
+    return [
+        row
+        for row in _grid_rows(staging)
+        if row.get("valid") and row.get("id") in selected_ids
+    ]
 
 
 def apply_date_to_selected(
@@ -517,7 +926,7 @@ def apply_date_to_selected(
     return staging
 
 
-def _make_upload_result(rows: list[dict[str, str]]) -> tuple[html.Section, str]:
+def _make_upload_result(rows: list[dict]) -> tuple[html.Section, str]:
     completed = sum(row["status"] == "完成" for row in rows)
     imported_rows = sum(row.get("imported_rows", 0) for row in rows)
     failed = len(rows) - completed
@@ -553,13 +962,19 @@ def _make_upload_result(rows: list[dict[str, str]]) -> tuple[html.Section, str]:
     return status, f"batch-status {modifier}"
 
 
-def confirm_staged_workbooks(staging: dict | None):
-    """Reparse and independently store every valid staged workbook."""
+def process_staged_workbooks(
+    staging: dict | None,
+    selected_ids: set[str] | None = None,
+) -> list[dict]:
+    """Reparse and independently store the requested staged workbooks."""
     rows: list[dict] = []
     for staged in (staging or {}).get("rows", []):
+        if selected_ids is not None and staged.get("id") not in selected_ids:
+            continue
         if not staged.get("valid"):
             rows.append(
                 {
+                    "id": staged.get("id"),
                     "filename": staged["filename"],
                     "status": "失敗",
                     "detail": staged.get("error") or "檔案格式無效",
@@ -581,6 +996,7 @@ def confirm_staged_workbooks(staging: dict | None):
         except Exception as exc:
             rows.append(
                 {
+                    "id": staged.get("id"),
                     "filename": staged["filename"],
                     "status": "失敗",
                     "detail": str(exc),
@@ -590,6 +1006,7 @@ def confirm_staged_workbooks(staging: dict | None):
             continue
         rows.append(
             {
+                "id": staged.get("id"),
                 "filename": staged["filename"],
                 "status": "完成",
                 "detail": (
@@ -599,7 +1016,33 @@ def confirm_staged_workbooks(staging: dict | None):
                 "imported_rows": dataframe.height,
             }
         )
-    return _make_upload_result(rows)
+    return rows
+
+
+def merge_upload_results(
+    existing: list[dict] | None,
+    latest: list[dict],
+) -> list[dict]:
+    merged = list(existing or [])
+    positions = {row.get("id"): index for index, row in enumerate(merged)}
+    for row in latest:
+        row_id = row.get("id")
+        if row_id in positions:
+            merged[positions[row_id]] = row
+        else:
+            positions[row_id] = len(merged)
+            merged.append(row)
+    return merged
+
+
+def confirm_staged_workbooks(
+    staging: dict | None,
+    selected_ids: set[str] | None = None,
+):
+    """Store requested staged workbooks and render their result."""
+    return _make_upload_result(
+        process_staged_workbooks(staging, selected_ids)
+    )
 
 
 @app.callback(
@@ -611,6 +1054,8 @@ def confirm_staged_workbooks(staging: dict | None):
     Output("upload-staging-summary", "children"),
     Output("upload-status", "children"),
     Output("upload-status", "className"),
+    Output("upload-conflict-panel", "children"),
+    Output("upload-confirm-button", "children"),
     Input("excel-upload", "contents"),
     State("excel-upload", "filename"),
     prevent_initial_call=True,
@@ -619,49 +1064,58 @@ def show_uploaded_workbooks(
     contents: list[str] | None, filenames: list[str] | None
 ):
     if not contents:
-        return (
-            {"rows": []},
-            [],
-            [],
-            "upload-modal",
-            True,
-            "",
-            "未收到任何檔案。",
-            "batch-status batch-status--error",
-        )
+        raise PreventUpdate
     staging = stage_uploaded_workbooks(contents, filenames)
     grid_rows = _grid_rows(staging)
-    valid_rows = [row for row in grid_rows if row["valid"]]
-    invalid_count = len(grid_rows) - len(valid_rows)
-    summary = (
-        f"{len(valid_rows)} 個有效檔案將上傳"
-        + (f" · {invalid_count} 個檔案需修正" if invalid_count else "")
-    )
+    valid_rows = selected_grid_rows(staging)
+    conflicts = staging.get("conflicts", [])
     return (
         staging,
         grid_rows,
         valid_rows,
         "upload-modal upload-modal--open",
         not valid_rows,
-        summary,
+        upload_staging_summary(staging),
         "",
         "batch-status",
+        make_conflict_panel(conflicts),
+        "仍要上傳" if conflicts else "確認上傳",
     )
 
 
 @app.callback(
     Output("upload-batch-date", "date"),
     Output("upload-date-help", "children"),
+    Output("upload-staging-store", "data", allow_duplicate=True),
+    Output("upload-conflict-panel", "children", allow_duplicate=True),
+    Output("upload-staging-summary", "children", allow_duplicate=True),
+    Output("upload-confirm-button", "children", allow_duplicate=True),
+    Output("upload-confirm-button", "disabled", allow_duplicate=True),
     Input("upload-staging-grid", "selectedRows"),
+    State("upload-staging-store", "data"),
     prevent_initial_call=True,
 )
-def update_staged_selection(selected_rows):
-    return selected_date_state(selected_rows)
+def update_staged_selection(selected_rows, staging):
+    updated = update_staging_selection(staging, selected_rows)
+    picker_date, help_text = selected_date_state(selected_rows)
+    conflicts = updated.get("conflicts", [])
+    return (
+        picker_date,
+        help_text,
+        updated,
+        make_conflict_panel(conflicts),
+        upload_staging_summary(updated),
+        "仍要上傳" if conflicts else "確認上傳",
+        not selected_row_ids(selected_rows),
+    )
 
 
 @app.callback(
     Output("upload-staging-store", "data", allow_duplicate=True),
     Output("upload-staging-grid", "rowData", allow_duplicate=True),
+    Output("upload-conflict-panel", "children", allow_duplicate=True),
+    Output("upload-staging-summary", "children", allow_duplicate=True),
+    Output("upload-confirm-button", "children", allow_duplicate=True),
     Input("upload-batch-date", "date"),
     State("upload-staging-grid", "selectedRows"),
     State("upload-staging-store", "data"),
@@ -669,7 +1123,20 @@ def update_staged_selection(selected_rows):
 )
 def update_staged_dates(selected_date, selected_rows, staging):
     updated = apply_date_to_selected(staging, selected_rows, selected_date)
-    return updated, _grid_rows(updated)
+    if updated.get("review_phase") == "conflict_review":
+        updated = refresh_staging_conflicts(
+            updated, selected_ids=set(updated.get("selected_ids", []))
+        )
+    else:
+        updated["conflicts"] = []
+    conflicts = updated.get("conflicts", [])
+    return (
+        updated,
+        _grid_rows(updated),
+        make_conflict_panel(conflicts),
+        upload_staging_summary(updated),
+        "仍要上傳" if conflicts else "確認上傳",
+    )
 
 
 @app.callback(
@@ -682,14 +1149,22 @@ def update_staged_dates(selected_date, selected_rows, staging):
     Output("upload-status", "children", allow_duplicate=True),
     Output("upload-status", "className", allow_duplicate=True),
     Output("upload-modal-error", "children"),
+    Output("upload-conflict-panel", "children", allow_duplicate=True),
+    Output("upload-confirm-button", "children", allow_duplicate=True),
+    Output("upload-staging-summary", "children", allow_duplicate=True),
     Input("upload-cancel-button", "n_clicks"),
     Input("upload-confirm-button", "n_clicks"),
     State("upload-staging-store", "data"),
+    State("upload-staging-grid", "selectedRows"),
     prevent_initial_call=True,
     running=[(Output("upload-confirm-button", "disabled"), True, False)],
 )
-def finish_upload(cancel_clicks, confirm_clicks, staging):
+def finish_upload(cancel_clicks, confirm_clicks, staging, selected_rows=None):
     if ctx.triggered_id == "upload-cancel-button":
+        preserve_upload_status = (
+            (staging or {}).get("review_phase") == "conflict_review"
+            and bool((staging or {}).get("upload_results"))
+        )
         return (
             "upload-modal",
             {"rows": []},
@@ -697,14 +1172,115 @@ def finish_upload(cancel_clicks, confirm_clicks, staging):
             [],
             None,
             None,
+            no_update if preserve_upload_status else "",
+            no_update if preserve_upload_status else "batch-status",
             "",
-            "batch-status",
+            [],
+            "確認上傳",
             "",
         )
     if ctx.triggered_id != "upload-confirm-button" or not confirm_clicks:
         raise PreventUpdate
     try:
-        status, class_name = confirm_staged_workbooks(staging)
+        staging = staging or {"rows": []}
+        staging = update_staging_selection(staging, selected_rows)
+        selected_ids = set(staging.get("selected_ids", []))
+        if not selected_ids:
+            return (
+                "upload-modal upload-modal--open",
+                staging,
+                _grid_rows(staging),
+                [],
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                "請先勾選要檢查並上傳的檔案。",
+                [],
+                "確認上傳",
+                upload_staging_summary(staging),
+            )
+        reviewing_conflicts = (
+            staging.get("review_phase") == "conflict_review"
+            and set(staging.get("reviewed_selection", [])) == selected_ids
+        )
+        previous_signature = _conflict_signature(staging.get("conflicts", []))
+        staging = refresh_staging_conflicts(
+            staging, selected_ids=selected_ids
+        )
+        staging["review_phase"] = "conflict_review"
+        staging["reviewed_selection"] = sorted(selected_ids)
+        current_conflicts = staging.get("conflicts", [])
+        current_signature = _conflict_signature(current_conflicts)
+        if current_conflicts and not reviewing_conflicts:
+            conflicted_ids = conflict_source_ids(current_conflicts)
+            clean_ids = selected_ids - conflicted_ids
+            if clean_ids:
+                clean_results = process_staged_workbooks(staging, clean_ids)
+                staging["upload_results"] = merge_upload_results(
+                    staging.get("upload_results"), clean_results
+                )
+                staging["rows"] = [
+                    row
+                    for row in staging.get("rows", [])
+                    if row.get("id") not in clean_ids
+                ]
+            staging["selected_ids"] = sorted(conflicted_ids)
+            staging["reviewed_selection"] = sorted(conflicted_ids)
+            status = no_update
+            class_name = no_update
+            if clean_ids:
+                status, class_name = _make_upload_result(
+                    staging["upload_results"]
+                )
+            return (
+                "upload-modal upload-modal--open",
+                staging,
+                _grid_rows(staging),
+                selected_grid_rows(staging),
+                no_update,
+                no_update,
+                status,
+                class_name,
+                "",
+                make_conflict_panel(current_conflicts),
+                "仍要上傳",
+                upload_staging_summary(staging),
+            )
+        if reviewing_conflicts and current_signature != previous_signature:
+            return (
+                "upload-modal upload-modal--open",
+                staging,
+                _grid_rows(staging),
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                "資料庫內容在確認前已變更，衝突清單已更新。請重新檢視後再確認。",
+                make_conflict_panel(current_conflicts),
+                "仍要上傳" if current_conflicts else "確認上傳",
+                upload_staging_summary(staging),
+            )
+        latest_results = process_staged_workbooks(staging, selected_ids)
+        staging["upload_results"] = merge_upload_results(
+            staging.get("upload_results"), latest_results
+        )
+        successful_ids = {
+            row["id"]
+            for row in latest_results
+            if row["status"] == "完成"
+        }
+        staging["rows"] = [
+            row
+            for row in staging.get("rows", [])
+            if row.get("id") not in successful_ids
+        ]
+        staging["selected_ids"] = sorted(selected_ids - successful_ids)
+        staging["review_phase"] = "confirmation"
+        staging["reviewed_selection"] = []
+        staging["conflicts"] = []
+        status, class_name = _make_upload_result(staging["upload_results"])
     except Exception as exc:
         return (
             "upload-modal upload-modal--open",
@@ -716,6 +1292,27 @@ def finish_upload(cancel_clicks, confirm_clicks, staging):
             no_update,
             no_update,
             f"無法處理此批次：{exc}。請確認檔案後再試一次。",
+            no_update,
+            no_update,
+            no_update,
+        )
+    valid_rows_remain = any(
+        row.get("valid") for row in staging.get("rows", [])
+    )
+    if valid_rows_remain:
+        return (
+            "upload-modal upload-modal--open",
+            staging,
+            _grid_rows(staging),
+            selected_grid_rows(staging),
+            no_update,
+            no_update,
+            status,
+            class_name,
+            "",
+            [],
+            "確認上傳",
+            upload_staging_summary(staging),
         )
     return (
         "upload-modal",
@@ -726,6 +1323,9 @@ def finish_upload(cancel_clicks, confirm_clicks, staging):
         None,
         status,
         class_name,
+        "",
+        [],
+        "確認上傳",
         "",
     )
 

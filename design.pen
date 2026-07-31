@@ -9243,6 +9243,2408 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "VdNzr",
+      "x": 0,
+      "y": 2364,
+      "name": "Holdings Database — Upload Conflict Warning",
+      "clip": true,
+      "width": 1440,
+      "height": 1024,
+      "fill": [
+        "$bg",
+        {
+          "type": "gradient",
+          "gradientType": "radial",
+          "enabled": true,
+          "rotation": 0,
+          "size": {
+            "width": 1.45,
+            "height": 1.45
+          },
+          "colors": [
+            {
+              "color": "#6366F11F",
+              "position": 0
+            },
+            {
+              "color": "#F4F6FB00",
+              "position": 1
+            }
+          ],
+          "center": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "layout": "none",
+      "children": [
+        {
+          "id": "brB6F",
+          "type": "ref",
+          "ref": "kacID",
+          "name": "Primary navigation / Upload active",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 64,
+          "descendants": {
+            "rJt0Q": {
+              "content": "Holdings Database"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "CJrDs",
+          "x": 20,
+          "y": 104,
+          "name": "Application shell",
+          "width": 1400,
+          "fill": "#FFFFFF00",
+          "layout": "vertical",
+          "gap": 22,
+          "children": [
+            {
+              "type": "frame",
+              "id": "jZu9R",
+              "name": "Hero",
+              "width": "fill_container",
+              "fill": "#FFFFFF00",
+              "layout": "vertical",
+              "gap": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "N9fwA",
+                  "name": "Page title",
+                  "fill": "$text-primary",
+                  "content": "投資組合資料庫",
+                  "lineHeight": 1.05,
+                  "fontFamily": "$font-ui",
+                  "fontSize": 44,
+                  "fontWeight": "700",
+                  "letterSpacing": -1.7
+                },
+                {
+                  "type": "text",
+                  "id": "l6b6vi",
+                  "name": "Page subtitle",
+                  "fill": "$text-secondary",
+                  "content": "請將保管銀行的越權報表上傳，支援世華銀行與中信銀行格式",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font-ui",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mHXs1",
+              "name": "Excel upload dropzone",
+              "width": "fill_container",
+              "height": 190,
+              "fill": "#FFFFFFD1",
+              "cornerRadius": 18,
+              "stroke": "$border-accent",
+              "strokeWidth": 2,
+              "strokeAlignment": "inner",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 24,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "u2wJ0y",
+                  "name": "Upload icon tile",
+                  "width": 46,
+                  "height": 46,
+                  "fill": "$accent",
+                  "cornerRadius": 14,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "NwJPk",
+                      "name": "Upload arrow",
+                      "width": 24,
+                      "height": 24,
+                      "icon": "arrow-up",
+                      "library": "lucide",
+                      "weight": 700,
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "s3ZWcn",
+                  "name": "Dropzone title",
+                  "fill": "$text-primary",
+                  "content": "將 Excel 或 Outlook 訊息檔拖曳到這裡",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "OGgvK",
+                  "name": "Dropzone hint",
+                  "fill": "$text-secondary",
+                  "content": "或點擊選擇報表檔案（可一次選取多個）",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "o48NO",
+                  "name": "Accepted file formats",
+                  "fill": "$text-secondary",
+                  "content": "支援 .xlsx、.xls、.msg",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "oVgow",
+              "name": "Batch upload status panel",
+              "clip": true,
+              "width": "fill_container",
+              "height": 474,
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "I5Ygm",
+                  "name": "Batch summary header",
+                  "width": "fill_container",
+                  "height": 88,
+                  "fill": "$surface",
+                  "padding": [
+                    18,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ZF5QU",
+                      "name": "Batch summary copy",
+                      "width": 520,
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "p6Ksm",
+                          "name": "Batch status title",
+                          "fill": "$text-primary",
+                          "content": "正在處理 50 個報表檔案",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 17,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pIusy",
+                          "name": "Batch status subtitle",
+                          "fill": "$text-secondary",
+                          "content": "可離開此頁面，處理會在背景繼續",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kuUhr",
+                      "name": "Overall upload progress",
+                      "width": 420,
+                      "layout": "vertical",
+                      "gap": 7,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ExSj0",
+                          "name": "Overall progress labels",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "szH6K",
+                              "name": "Overall progress count",
+                              "fill": "$text-primary",
+                              "content": "32 / 50 已處理",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "dNgzB",
+                              "name": "Overall progress percent",
+                              "fill": "$accent",
+                              "content": "64%",
+                              "fontFamily": "$font-data",
+                              "fontSize": 13,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "gsROj",
+                          "name": "Overall progress track",
+                          "width": "fill_container",
+                          "height": 8,
+                          "fill": "#E2E8F0",
+                          "cornerRadius": 4,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 4,
+                              "id": "f0BZkz",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Overall progress fill",
+                              "fill": "$accent",
+                              "width": 269,
+                              "height": 8
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NcHXJ",
+                  "name": "Status filter toolbar",
+                  "width": "fill_container",
+                  "height": 54,
+                  "fill": "#F8FAFC",
+                  "stroke": "$border",
+                  "strokeWidth": {
+                    "top": 1,
+                    "bottom": 1
+                  },
+                  "strokeAlignment": "inner",
+                  "padding": [
+                    10,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "BhZVI",
+                      "name": "Status filter chips",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "MwOVb",
+                          "name": "Filter 全部 50",
+                          "fill": "#EEF2FF",
+                          "cornerRadius": 16,
+                          "padding": [
+                            7,
+                            11
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "GsQGZ",
+                              "name": "全部 50",
+                              "fill": "$accent",
+                              "content": "全部 50",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "luhin",
+                          "name": "Filter 處理中 18",
+                          "fill": "#FEF3C7",
+                          "cornerRadius": 16,
+                          "padding": [
+                            7,
+                            11
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "l5eYu",
+                              "name": "處理中 18",
+                              "fill": "#92400E",
+                              "content": "處理中 18",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "T9VA0",
+                          "name": "Filter 完成 29",
+                          "fill": "#DCFCE7",
+                          "cornerRadius": 16,
+                          "padding": [
+                            7,
+                            11
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "nstov",
+                              "name": "完成 29",
+                              "fill": "#166534",
+                              "content": "完成 29",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jCDbp",
+                          "name": "Filter 失敗 3",
+                          "fill": "#FEE2E2",
+                          "cornerRadius": 16,
+                          "padding": [
+                            7,
+                            11
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "rLQ7C",
+                              "name": "失敗 3",
+                              "fill": "#B91C1C",
+                              "content": "失敗 3",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "p6P16",
+                      "name": "Retry failed action",
+                      "fill": "$accent",
+                      "content": "重新上傳失敗檔案",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "B2Ufi",
+                  "name": "Upload status list",
+                  "width": "fill_container",
+                  "height": 280,
+                  "fill": "$surface",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "V5NPnW",
+                      "name": "File status row 1",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FFFFFF",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ByQWB",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "LENvq",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "#16A34A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "sRL9R",
+                              "name": "Extracted workbook filename",
+                              "fill": "$text-primary",
+                              "content": "message.msg › DC029_20260626.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "t9rsL",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xAaWb",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "24 筆資料已寫入",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "DqaNs",
+                              "name": "File status label",
+                              "fill": "#16A34A",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "完成",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TO2gv",
+                      "name": "File status row 2",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FAFBFD",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "bpF0m",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Unwbo",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "#16A34A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "jmJZ5",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "TW_growth_202607.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LhCmA",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "a6LvY",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "31 筆資料已寫入",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "fTUcI",
+                              "name": "File status label",
+                              "fill": "#16A34A",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "完成",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "D0ipCT",
+                      "name": "File status row 3",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FFFFFF",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "RcsJe",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "hJuCY",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "loader-circle",
+                              "library": "lucide",
+                              "fill": "#D97706"
+                            },
+                            {
+                              "type": "text",
+                              "id": "TkTM3",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "US_income_Q2.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "UZBoF",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "DlbfL",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "正在驗證欄位 · 72%",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "h3wXG",
+                              "name": "File status label",
+                              "fill": "#D97706",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "處理中",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oAXQq",
+                      "name": "File status row 4",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FAFBFD",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "H2QopU",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "lFbd8",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "clock-3",
+                              "library": "lucide",
+                              "fill": "#64748B"
+                            },
+                            {
+                              "type": "text",
+                              "id": "peTRI",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "ETF_holdings_07.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "H6eSd",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "uIx0j",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "第 4 個等待處理",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Yo5xp",
+                              "name": "File status label",
+                              "fill": "#64748B",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "排隊中",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nmMVb",
+                      "name": "File status row 5",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FFFFFF",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "G3oeW",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "C2Oiq",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "#DC2626"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Gpx9X",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "bond_portfolio.xlsx",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YV72F",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Xiiit",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "缺少「Ticker」欄位",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "fPB2C",
+                              "name": "File status label",
+                              "fill": "#DC2626",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "失敗",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "t1tWn",
+                      "name": "File status row 6",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "#FAFBFD",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "G8IiA8",
+                          "name": "File identity",
+                          "width": 500,
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "PmCrJ",
+                              "name": "File status icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "loader-circle",
+                              "library": "lucide",
+                              "fill": "#D97706"
+                            },
+                            {
+                              "type": "text",
+                              "id": "J1iLn",
+                              "name": "Excel filename",
+                              "fill": "$text-primary",
+                              "content": "APAC_value_202607.xls",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "w7F6bg",
+                          "name": "File status metadata",
+                          "width": 480,
+                          "gap": 20,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "R8VyL",
+                              "name": "File status detail",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 250,
+                              "content": "正在讀取工作表 · 38%",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "wuA9q",
+                              "name": "File status label",
+                              "fill": "#D97706",
+                              "textGrowth": "fixed-width",
+                              "width": 60,
+                              "content": "處理中",
+                              "textAlign": "right",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "QDIMV",
+                  "name": "Status list pagination",
+                  "width": "fill_container",
+                  "height": 52,
+                  "fill": "#F8FAFC",
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Ddokd",
+                      "name": "Visible results count",
+                      "fill": "$text-secondary",
+                      "content": "顯示 1–6，共 50 個檔案",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "f3aIp",
+                      "name": "Pagination controls",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "mng9X",
+                          "name": "Page ‹",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "e8dVQp",
+                              "name": "Page label ‹",
+                              "fill": "$text-secondary",
+                              "content": "‹",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "w13fv",
+                          "name": "Page 1",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "$accent",
+                          "cornerRadius": 8,
+                          "stroke": "$accent",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "fDd1t",
+                              "name": "Page label 1",
+                              "fill": "#FFFFFF",
+                              "content": "1",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rEMhA",
+                          "name": "Page 2",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "rz9Aa",
+                              "name": "Page label 2",
+                              "fill": "$text-secondary",
+                              "content": "2",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "OMsoK",
+                          "name": "Page 3",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "i3EDJk",
+                              "name": "Page label 3",
+                              "fill": "$text-secondary",
+                              "content": "3",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "E2YlB",
+                          "name": "Page …",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "qvqxr",
+                              "name": "Page label …",
+                              "fill": "$text-secondary",
+                              "content": "…",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Mn7Os",
+                          "name": "Page 9",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Sb5Ue",
+                              "name": "Page label 9",
+                              "fill": "$text-secondary",
+                              "content": "9",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sZuZp",
+                          "name": "Page ›",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "uXaNa",
+                              "name": "Page label ›",
+                              "fill": "$text-secondary",
+                              "content": "›",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "u0SqT",
+          "x": 0,
+          "y": 0,
+          "name": "Modal backdrop",
+          "width": 1440,
+          "height": 1024,
+          "fill": "#11182799",
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "V4TKE",
+          "x": 250,
+          "y": 52,
+          "name": "Upload confirmation dialog",
+          "clip": true,
+          "width": 940,
+          "height": 920,
+          "fill": "$surface",
+          "cornerRadius": 18,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#0F172A3D",
+            "offset": {
+              "x": 0,
+              "y": 18
+            },
+            "blur": 48,
+            "spread": -8
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "B0dgU",
+              "name": "Dialog header",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "layout": "vertical",
+              "gap": 10,
+              "padding": [
+                26,
+                28,
+                20,
+                28
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "amIGr",
+                  "name": "Dialog title",
+                  "fill": "$text-primary",
+                  "content": "確認上傳資料",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 24,
+                  "fontWeight": "700",
+                  "letterSpacing": -0.4
+                },
+                {
+                  "type": "text",
+                  "id": "bOEXO",
+                  "name": "Dialog explanation",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "系統已比對相同 ISIN 與資料日期。請先檢視下列差異，再決定是否繼續上傳。",
+                  "lineHeight": 1.55,
+                  "fontFamily": "$font-ui",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "UXDLh",
+              "name": "Dialog body",
+              "width": "fill_container",
+              "height": 710,
+              "layout": "vertical",
+              "gap": 14,
+              "padding": [
+                18,
+                24
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "jgn3z",
+                  "name": "Conflict warning banner",
+                  "width": "fill_container",
+                  "height": 104,
+                  "fill": "#FFF7ED",
+                  "cornerRadius": 12,
+                  "stroke": "#FDBA74",
+                  "strokeWidth": 1,
+                  "gap": 14,
+                  "padding": [
+                    16,
+                    18
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "FPL4X",
+                      "name": "Warning icon tile",
+                      "width": 42,
+                      "height": 42,
+                      "fill": "#EA580C",
+                      "cornerRadius": 10,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "SMi1Z",
+                          "name": "Warning icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "triangle-alert",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BB7aQ",
+                      "name": "Warning copy",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 5,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "la5Eq",
+                          "name": "Warning title",
+                          "fill": "#9A3412",
+                          "content": "偵測到標的層級資料不一致",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "E0AVP6",
+                          "name": "Warning explanation",
+                          "fill": "#9A3412",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "相同 ISIN、相同資料日期的基金淨值或發行規模與資料庫不同。空白值不列入衝突。",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-ui",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "d9W4ar",
+                      "name": "Conflict count badge",
+                      "fill": "#FFEDD5",
+                      "cornerRadius": 16,
+                      "stroke": "#FDBA74",
+                      "strokeWidth": 1,
+                      "padding": [
+                        7,
+                        11
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "PpZh2",
+                          "name": "Conflict count",
+                          "fill": "#9A3412",
+                          "content": "3 ISIN · 5 項差異",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "l9lRO",
+                  "name": "Batch date editor",
+                  "width": "fill_container",
+                  "height": 68,
+                  "fill": "$accent-soft",
+                  "cornerRadius": 12,
+                  "stroke": "#C7D2FE",
+                  "strokeWidth": 1,
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "O3N3E8",
+                      "name": "Batch date copy",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "yI0aa",
+                          "name": "Batch date label",
+                          "fill": "$text-primary",
+                          "content": "套用日期至已選檔案",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "jF6e8",
+                          "name": "Selection count",
+                          "fill": "$text-secondary",
+                          "content": "已選取 1 個檔案 · 修改後會重新比對",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "C7hRn",
+                      "name": "Date picker",
+                      "width": 190,
+                      "height": 42,
+                      "fill": "$surface",
+                      "cornerRadius": 9,
+                      "stroke": "$border-accent",
+                      "strokeWidth": 1,
+                      "padding": [
+                        0,
+                        13
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "d4uIxq",
+                          "name": "Selected date",
+                          "fill": "$text-primary",
+                          "content": "2026/07/29",
+                          "fontFamily": "$font-data",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "A35zX",
+                          "name": "Calendar icon",
+                          "width": 17,
+                          "height": 17,
+                          "icon": "calendar-days",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "rdnFy",
+                  "name": "Confirmation tabs",
+                  "width": "fill_container",
+                  "height": 38,
+                  "stroke": "$border",
+                  "strokeWidth": {
+                    "bottom": 1
+                  },
+                  "gap": 24,
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "dVkXs",
+                      "name": "Files tab",
+                      "height": 38,
+                      "padding": [
+                        0,
+                        2
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zmy49",
+                          "name": "Files tab label",
+                          "fill": "$text-secondary",
+                          "content": "待上傳檔案 5",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GILwm",
+                      "name": "Conflicts tab active",
+                      "height": 38,
+                      "stroke": "#EA580C",
+                      "strokeWidth": {
+                        "bottom": 3
+                      },
+                      "padding": [
+                        0,
+                        2
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "LEshE",
+                          "name": "Conflicts tab label",
+                          "fill": "#C2410C",
+                          "content": "衝突資料 5",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "emKZ4",
+                      "name": "Comparison rule",
+                      "width": "fill_container",
+                      "height": 38,
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "P4aj2",
+                          "name": "Comparison rule text",
+                          "fill": "$text-secondary",
+                          "content": "比對規則：同 ISIN ＋ 同資料日期",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PQCRW",
+                  "name": "Conflict details table",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 422,
+                  "fill": "$surface",
+                  "cornerRadius": 10,
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "wbjBy",
+                      "name": "Conflict table header",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#F8FAFC",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Xda6k",
+                          "name": "ISIN and source header",
+                          "width": 180,
+                          "height": "fill_container",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "T553n4",
+                              "name": "ISIN and source header label",
+                              "fill": "$text-secondary",
+                              "content": "ISIN / 日期 / 檔案",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 11,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "f82oFD",
+                          "name": "Field header",
+                          "width": 190,
+                          "height": "fill_container",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kbZLu",
+                              "name": "Field header label",
+                              "fill": "$text-secondary",
+                              "content": "衝突欄位",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 11,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LcHSu",
+                          "name": "Incoming header",
+                          "width": 125,
+                          "height": "fill_container",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "fXYTf",
+                              "name": "Incoming header label",
+                              "fill": "$text-secondary",
+                              "content": "本次上傳值",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 11,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "STx6y",
+                          "name": "Stored header",
+                          "width": 145,
+                          "height": "fill_container",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "r0ODp",
+                              "name": "Stored header label",
+                              "fill": "$text-secondary",
+                              "content": "資料庫值",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 11,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "m23JhQ",
+                          "name": "Accounts header",
+                          "width": 220,
+                          "height": "fill_container",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "p7Kl3",
+                              "name": "Accounts header label",
+                              "fill": "$text-secondary",
+                              "content": "既有專戶",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 11,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YKTrO",
+                      "name": "Conflict row 1",
+                      "width": "fill_container",
+                      "height": 72,
+                      "fill": "#FFFFFF",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "nQW4O",
+                          "name": "ISIN and source cell 1",
+                          "width": 180,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YqJDg",
+                              "name": "ISIN 1",
+                              "fill": "$text-primary",
+                              "content": "US46434G1031",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "WVPCu",
+                              "name": "Source metadata 1",
+                              "fill": "$text-secondary",
+                              "content": "2026/07/30 · S002_20260731.xlsx",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "PxPnu",
+                          "name": "Field cell 1",
+                          "width": 190,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "V5mESN",
+                              "name": "Field 1",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "基金淨值 / ETF 收盤價",
+                              "lineHeight": 1.35,
+                              "fontFamily": "$font-ui",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tvEer",
+                          "name": "Incoming value cell 1",
+                          "width": 125,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "nKBQ8",
+                              "name": "Incoming value 1",
+                              "fill": "#C2410C",
+                              "content": "80.30",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Um3fF",
+                          "name": "Stored value cell 1",
+                          "width": 145,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CMYN4",
+                              "name": "Stored value 1",
+                              "fill": "$text-primary",
+                              "content": "82.17",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "W00Q9E",
+                          "name": "Accounts cell 1",
+                          "width": 220,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ar3Mx",
+                              "name": "Accounts 1",
+                              "fill": "$text-secondary",
+                              "content": "S000000016005",
+                              "fontFamily": "$font-data",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ikHwK",
+                      "name": "Conflict row 2",
+                      "width": "fill_container",
+                      "height": 72,
+                      "fill": "#FFFBF7",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GgLUV",
+                          "name": "ISIN and source cell 2",
+                          "width": 180,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "mqSnC",
+                              "name": "ISIN 2",
+                              "fill": "$text-primary",
+                              "content": "AU00000HJPN5",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "oh4Zg",
+                              "name": "Source metadata 2",
+                              "fill": "$text-secondary",
+                              "content": "2026/07/29 · DC106_20260730.xlsx",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "E38lgb",
+                          "name": "Field cell 2",
+                          "width": 190,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "wKpAy",
+                              "name": "Field 2",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "標的發行規模 / 流通股數",
+                              "lineHeight": 1.35,
+                              "fontFamily": "$font-ui",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bNB7r",
+                          "name": "Incoming value cell 2",
+                          "width": 125,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "l3GUrv",
+                              "name": "Incoming value 2",
+                              "fill": "#C2410C",
+                              "content": "10,026,319",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "AU9PZ",
+                          "name": "Stored value cell 2",
+                          "width": 145,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YeiOr",
+                              "name": "Stored value 2",
+                              "fill": "$text-primary",
+                              "content": "322,068,100",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "keKHS",
+                          "name": "Accounts cell 2",
+                          "width": 220,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "t1mHI",
+                              "name": "Accounts 2",
+                              "fill": "$text-secondary",
+                              "content": "DC123",
+                              "fontFamily": "$font-data",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FbCoh",
+                      "name": "Conflict row 3",
+                      "width": "fill_container",
+                      "height": 72,
+                      "fill": "#FFFFFF",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "PjMvt",
+                          "name": "ISIN and source cell 3",
+                          "width": 180,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "eJpEW",
+                              "name": "ISIN 3",
+                              "fill": "$text-primary",
+                              "content": "IE0032314100",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "m02u3",
+                              "name": "Source metadata 3",
+                              "fill": "$text-secondary",
+                              "content": "2026/07/29 · DC001_20260730.xlsx",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MsEi2",
+                          "name": "Field cell 3",
+                          "width": 190,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kLk52",
+                              "name": "Field 3",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "基金淨值 / ETF 收盤價",
+                              "lineHeight": 1.35,
+                              "fontFamily": "$font-ui",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "p6H6j",
+                          "name": "Incoming value cell 3",
+                          "width": 125,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Scr4o",
+                              "name": "Incoming value 3",
+                              "fill": "#C2410C",
+                              "content": "63.68",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wZhqL",
+                          "name": "Stored value cell 3",
+                          "width": 145,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "m6z9Qv",
+                              "name": "Stored value 3",
+                              "fill": "$text-primary",
+                              "content": "63.82",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "H0xyQ",
+                          "name": "Accounts cell 3",
+                          "width": 220,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "y5OAE",
+                              "name": "Accounts 3",
+                              "fill": "$text-secondary",
+                              "content": "DC029 · DC030 +10",
+                              "fontFamily": "$font-data",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "p8ztR",
+                      "name": "Conflict row 4",
+                      "width": "fill_container",
+                      "height": 72,
+                      "fill": "#FFFBF7",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Y95SKt",
+                          "name": "ISIN and source cell 4",
+                          "width": 180,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zqTVh",
+                              "name": "ISIN 4",
+                              "fill": "$text-primary",
+                              "content": "IE0032314100",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ErJgl",
+                              "name": "Source metadata 4",
+                              "fill": "$text-secondary",
+                              "content": "2026/07/29 · DC154_20260730.xlsx",
+                              "fontFamily": "$font-ui",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "lnRMs",
+                          "name": "Field cell 4",
+                          "width": 190,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YBHDJ",
+                              "name": "Field 4",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "標的發行規模 / 流通股數",
+                              "lineHeight": 1.35,
+                              "fontFamily": "$font-ui",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wRSgg",
+                          "name": "Incoming value cell 4",
+                          "width": 125,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YeyJe",
+                              "name": "Incoming value 4",
+                              "fill": "#C2410C",
+                              "content": "7,036,499,797",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "kcV9v",
+                          "name": "Stored value cell 4",
+                          "width": 145,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "IpjTo",
+                              "name": "Stored value 4",
+                              "fill": "$text-primary",
+                              "content": "262,754,294",
+                              "fontFamily": "$font-data",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Hm9wd",
+                          "name": "Accounts cell 4",
+                          "width": 220,
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 3,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "KSfpi",
+                              "name": "Accounts 4",
+                              "fill": "$text-secondary",
+                              "content": "DC113 · DC117 +5",
+                              "fontFamily": "$font-data",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ceGxr",
+                      "name": "Conflict table footer",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#F8FAFC",
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XFzeH",
+                          "name": "Visible conflicts",
+                          "fill": "$text-secondary",
+                          "content": "顯示 1–4，共 5 項差異",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "W8plBC",
+                          "name": "Next conflicts action",
+                          "fill": "$accent",
+                          "content": "下一頁  →",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 11,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "R1w6AJ",
+              "name": "Dialog footer",
+              "width": "fill_container",
+              "height": 82,
+              "fill": "#F8FAFC",
+              "stroke": "$border",
+              "strokeWidth": {
+                "top": 1
+              },
+              "padding": [
+                18,
+                28
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "UNyFt",
+                  "name": "Upload summary",
+                  "fill": "$text-secondary",
+                  "content": "5 個有效檔案 · 3 個 ISIN 有資料差異",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "SdIkG",
+                  "name": "Dialog actions",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "MzGp9",
+                      "name": "Cancel button",
+                      "height": 44,
+                      "fill": "$surface",
+                      "cornerRadius": 9,
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "padding": [
+                        0,
+                        20
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "e9ix7",
+                          "name": "Cancel label",
+                          "fill": "$text-primary",
+                          "content": "取消",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lGVWc",
+                      "name": "Confirm upload button",
+                      "height": 44,
+                      "fill": "$accent",
+                      "cornerRadius": 9,
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        22
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "CODXL",
+                          "name": "Confirm upload icon",
+                          "width": 17,
+                          "height": 17,
+                          "icon": "shield-alert",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KHnAH",
+                          "name": "Confirm upload label",
+                          "fill": "#FFFFFF",
+                          "content": "仍要上傳",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "variables": {

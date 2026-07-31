@@ -12,6 +12,7 @@ DATE_COLUMN = "檢查日期"
 ACCOUNT_CODE_COLUMN = "專戶代號"
 ACCOUNT_NAME_COLUMN = "專戶名稱"
 ISSUE_SIZE_COLUMN = "標的發行規模（標的幣別）或流通股數"
+NAV_COLUMN = "基金淨值/ETF收盤價"
 NAV_RATIO_COLUMN = "佔淨資產比重(%)"
 ASSET_RATIO_COLUMN = "佔標的資產或單位數比重(%)"
 CURRENCY_COLUMN = "商品幣別"
@@ -23,7 +24,7 @@ HOLDINGS_COLUMNS = [
     "標的種類",
     "類型別",
     "庫存單位數",
-    "基金淨值/ETF收盤價",
+    NAV_COLUMN,
     CURRENCY_COLUMN,
     "持有市值(帳戶幣別)",
     "持有市值(標的幣別)",
@@ -230,6 +231,47 @@ def holdings_table_is_ready(database_path: Path = DATABASE_PATH) -> bool:
             f"PRAGMA table_info({quote_identifier(TABLE_NAME)})"
         ).fetchall()
     return {DATE_COLUMN, *HOLDINGS_COLUMNS}.issubset({row[1] for row in columns})
+
+
+def load_instrument_observations(
+    keys: set[tuple[str, str]],
+    database_path: Path = DATABASE_PATH,
+) -> list[dict[str, Any]]:
+    """Load instrument-level values for a batch of exact (ISIN, date) keys."""
+    if not keys or not holdings_table_is_ready(database_path):
+        return []
+
+    columns = [
+        "ISIN",
+        DATE_COLUMN,
+        ACCOUNT_CODE_COLUMN,
+        NAV_COLUMN,
+    ]
+    quoted_holdings = quote_identifier(TABLE_NAME)
+    quoted_columns = ", ".join(
+        f"{quoted_holdings}.{quote_identifier(column)}" for column in columns
+    )
+    # Temp table + JOIN avoids bind-variable chunking for large key sets.
+    with sqlite3.connect(database_path) as connection:
+        connection.execute(
+            "CREATE TEMP TABLE instrument_lookup ("
+            "isin TEXT NOT NULL, "
+            "check_date TEXT NOT NULL, "
+            "PRIMARY KEY (isin, check_date))"
+        )
+        connection.executemany(
+            "INSERT OR IGNORE INTO instrument_lookup (isin, check_date) VALUES (?, ?)",
+            sorted(keys),
+        )
+        rows = connection.execute(
+            f"SELECT {quoted_columns} "
+            f"FROM {quoted_holdings} "
+            f"JOIN instrument_lookup "
+            f"ON {quoted_holdings}.{quote_identifier('ISIN')} = instrument_lookup.isin "
+            f"AND {quoted_holdings}.{quote_identifier(DATE_COLUMN)} "
+            f"= instrument_lookup.check_date"
+        ).fetchall()
+    return [dict(zip(columns, row, strict=True)) for row in rows]
 
 
 def load_available_dates(database_path: Path = DATABASE_PATH) -> list[str]:

@@ -173,8 +173,8 @@ def layout() -> html.Div:
                                         id="upload-modal-title",
                                     ),
                                     html.P(
-                                        "勾選的列用於批次設定日期；所有格式有效的"
-                                        "檔案仍會在確認後上傳。"
+                                        "勾選的檔案可批次設定日期，且只有勾選的"
+                                        "檔案在確認後會進行檢查並上傳。"
                                     ),
                                 ],
                             ),
@@ -205,6 +205,11 @@ def layout() -> html.Div:
                                                 ),
                                             ),
                                         ],
+                                    ),
+                                    html.Div(
+                                        id="upload-conflict-panel",
+                                        className="upload-conflict-panel",
+                                        role="alert",
                                     ),
                                     staging_grid(),
                                     html.Div(

@@ -492,6 +492,49 @@ class DatabaseTests(unittest.TestCase):
 
         self.assertEqual(database.load_holdings_history(self.database).height, 3)
 
+    def test_load_instrument_observations_joins_exact_isin_date_keys(self):
+        data = self.holdings({
+            "ISIN": ["F1", "F1", "F1", "F2"],
+            database.DATE_COLUMN: [
+                "2025-01-01",
+                "2025-01-02",
+                "2025-01-02",
+                "2025-01-01",
+            ],
+            "標的名稱": ["Fund 1", "Fund 1", "Fund 1", "Fund 2"],
+            "標的種類": ["基金"] * 4,
+            "類型別": ["A"] * 4,
+            "庫存單位數": [1.0] * 4,
+            database.NAV_COLUMN: [10.0, 11.0, 11.5, 20.0],
+            "持有市值(標的幣別)": [10.0, 11.0, 11.5, 20.0],
+        }).with_columns(
+            pl.Series(database.ACCOUNT_CODE_COLUMN, ["A1", "A1", "A2", "A1"])
+        )
+        database.store_dataframe(data, self.database)
+
+        observations = database.load_instrument_observations(
+            {
+                ("F1", "2025-01-02"),
+                *((f"missing-{index}", "2025-01-01") for index in range(401)),
+            },
+            self.database,
+        )
+
+        self.assertEqual(len(observations), 2)
+        by_account = {
+            row[database.ACCOUNT_CODE_COLUMN]: row for row in observations
+        }
+        self.assertEqual(set(by_account), {"A1", "A2"})
+        self.assertEqual(by_account["A1"]["ISIN"], "F1")
+        self.assertEqual(by_account["A1"][database.DATE_COLUMN], "2025-01-02")
+        self.assertEqual(by_account["A1"][database.NAV_COLUMN], 11.0)
+        self.assertEqual(by_account["A2"][database.NAV_COLUMN], 11.5)
+
+        self.assertEqual(
+            database.load_instrument_observations(set(), self.database),
+            [],
+        )
+
     def test_loaders_return_empty_results_without_ready_database(self):
         self.assertFalse(database.holdings_table_is_ready(self.database))
         self.assertEqual(database.load_available_dates(self.database), [])
@@ -519,6 +562,7 @@ class PresentationTests(unittest.TestCase):
         self.assertIn("確認上傳", text_content(modal))
         self.assertIsNotNone(find_component(modal, "upload-staging-grid"))
         self.assertIsNotNone(find_component(modal, "upload-batch-date"))
+        self.assertIsNotNone(find_component(modal, "upload-conflict-panel"))
         self.assertTrue(find_component(modal, "upload-confirm-button").disabled)
         self.assertIsNotNone(find_component(upload.layout(), "upload-staging-store"))
 
@@ -565,7 +609,7 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(len(empty.layout.annotations), 1)
         self.assertFalse(empty.layout.xaxis.visible)
 
-    def test_history_metric_matrix_and_representative_median(self):
+    def test_history_metric_matrix_and_mode_with_account_data(self):
         self.assertIn(database.ASSET_RATIO_COLUMN, history.METRICS[daily.TARGET_MODE])
         self.assertNotIn(database.NAV_RATIO_COLUMN, history.METRICS[daily.TARGET_MODE])
         self.assertIn(database.NAV_RATIO_COLUMN, history.METRICS[daily.ACCOUNT_MODE])
@@ -575,19 +619,35 @@ class PresentationTests(unittest.TestCase):
         for metric in (history.NAV_COLUMN, database.ISSUE_SIZE_COLUMN):
             with self.subTest(metric=metric):
                 observations = pl.DataFrame({
-                    database.DATE_COLUMN: ["2025-01-01", "2025-01-01"],
-                    database.ACCOUNT_NAME_COLUMN: ["Alpha", "Beta"],
-                    "標的名稱": ["Fund 1", "Fund 1"],
-                    metric: [10.0, 14.0],
+                    database.DATE_COLUMN: [
+                        "2025-01-01",
+                        "2025-01-01",
+                        "2025-01-01",
+                        "2025-01-01",
+                        "2025-01-02",
+                        "2025-01-02",
+                    ],
+                    database.ACCOUNT_NAME_COLUMN: [
+                        "Alpha",
+                        "Alpha",
+                        "Beta",
+                        "Beta",
+                        "Alpha",
+                        "Beta",
+                    ],
+                    "標的名稱": ["Fund 1"] * 6,
+                    metric: [10.0, 14.0, 14.0, 14.0, 20.0, 22.0],
                 })
                 figure, _, _ = history.make_figure(
                     observations, daily.TARGET_MODE, "Fund 1", metric
                 )
                 self.assertEqual(
                     [trace.name for trace in figure.data],
-                    ["代表值（所有標的資料的中位數）"],
+                    ["Alpha", "Beta", "眾數（所有專戶資料；並列時取最小值）"],
                 )
-                self.assertEqual(list(figure.data[0].y), [12.0])
+                self.assertEqual(list(figure.data[0].y), [10.0, 20.0])
+                self.assertEqual(list(figure.data[1].y), [14.0, 22.0])
+                self.assertEqual(list(figure.data[2].y), [14.0, 20.0])
 
     def test_history_controls_filter_range_and_reset_stale_values(self):
         observations = pl.DataFrame({
@@ -610,16 +670,23 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(metric, daily.ACCOUNT_VALUE_COLUMN)
 
     def test_make_table_marks_numeric_columns(self):
+        numeric_values = {
+            "庫存單位數": [75_273, None],
+            database.NAV_COLUMN: [1_350.393, 12.5],
+            "持有市值(帳戶幣別)": [3_294_066.6, 999.25],
+            "持有市值(標的幣別)": [1_001.0, None],
+            database.ISSUE_SIZE_COLUMN: [1_000_000, 500],
+            database.NAV_RATIO_COLUMN: [1.5, 0.25],
+            database.ASSET_RATIO_COLUMN: [0.25, None],
+        }
         table = main.make_table(
             pl.DataFrame(
                 {
-                    database.ACCOUNT_CODE_COLUMN: ["A001"],
-                    database.ACCOUNT_NAME_COLUMN: ["Alpha Fund"],
-                    "ISIN": ["F1"],
-                    database.CURRENCY_COLUMN: ["USD"],
-                    database.ISSUE_SIZE_COLUMN: [1_000_000],
-                    database.NAV_RATIO_COLUMN: [1.5],
-                    database.ASSET_RATIO_COLUMN: [0.25],
+                    database.ACCOUNT_CODE_COLUMN: ["A001", "A002"],
+                    database.ACCOUNT_NAME_COLUMN: ["Alpha Fund", "Beta Fund"],
+                    "ISIN": ["F1", "F2"],
+                    database.CURRENCY_COLUMN: ["USD", "TWD"],
+                    **numeric_values,
                 }
             ),
             "custom",
@@ -627,17 +694,32 @@ class PresentationTests(unittest.TestCase):
         self.assertIsInstance(table, dag.AgGrid)
         self.assertEqual(table.id, "custom")
         self.assertEqual(
-            [column["filter"] for column in table.columnDefs],
-            [
-                "agTextColumnFilter",
-                "agTextColumnFilter",
-                "agTextColumnFilter",
-                "agTextColumnFilter",
-                "agNumberColumnFilter",
-                "agNumberColumnFilter",
-                "agNumberColumnFilter",
-            ],
+            main.NUMERIC_VALUE_FORMATTER,
+            {"function": "formatNumber(params.value)"},
         )
+        columns_by_field = {
+            column["field"]: column for column in table.columnDefs
+        }
+        for name in main.NUMERIC_COLUMNS:
+            with self.subTest(column=name):
+                self.assertEqual(
+                    columns_by_field[name]["filter"], "agNumberColumnFilter"
+                )
+                self.assertEqual(
+                    columns_by_field[name]["valueFormatter"],
+                    main.NUMERIC_VALUE_FORMATTER,
+                )
+        for name in (
+            database.ACCOUNT_CODE_COLUMN,
+            database.ACCOUNT_NAME_COLUMN,
+            "ISIN",
+            database.CURRENCY_COLUMN,
+        ):
+            with self.subTest(column=name):
+                self.assertEqual(
+                    columns_by_field[name]["filter"], "agTextColumnFilter"
+                )
+                self.assertNotIn("valueFormatter", columns_by_field[name])
         currency = next(
             column for column in table.columnDefs
             if column["field"] == database.CURRENCY_COLUMN
@@ -652,6 +734,11 @@ class PresentationTests(unittest.TestCase):
             },
         )
         self.assertEqual(table.rowData[0][database.ACCOUNT_CODE_COLUMN], "A001")
+        for name, values in numeric_values.items():
+            with self.subTest(row_data=name):
+                self.assertEqual(
+                    [row[name] for row in table.rowData], values
+                )
         self.assertEqual(table.dashGridOptions["paginationPageSize"], 20)
         self.assertTrue(table.dashGridOptions["alwaysMultiSort"])
         self.assertTrue(table.defaultColDef["floatingFilter"])
@@ -849,24 +936,38 @@ class PresentationTests(unittest.TestCase):
         valid = reader.ParsedWorkbook(
             pl.DataFrame({database.DATE_COLUMN: ["2025-01-01"]}), "ctbc"
         )
-        with patch(
-            "main.parse_excel_result",
-            side_effect=[valid, ValueError("invalid"), valid],
+        with (
+            patch(
+                "main.parse_excel_result",
+                side_effect=[valid, ValueError("invalid"), valid],
+            ),
+            patch("main.load_instrument_observations") as load_observations,
         ):
             result = main.show_uploaded_workbooks(
                 ["one", "bad", "two"],
                 ["one.xlsx", "bad.xlsx", "two.xlsx"],
             )
 
+        load_observations.assert_not_called()
         selected_rows = result[2]
         self.assertEqual(
             [row["filename"] for row in selected_rows],
             ["one.xlsx", "two.xlsx"],
         )
         self.assertTrue(all(row["valid"] for row in selected_rows))
+        self.assertEqual(result[8], [])
+        self.assertEqual(result[9], "確認上傳")
+
+    def test_upload_reset_does_not_overwrite_existing_status(self):
+        for contents in (None, []):
+            with self.subTest(contents=contents):
+                with self.assertRaises(main.PreventUpdate):
+                    main.show_uploaded_workbooks(contents, None)
 
     def test_selection_and_mixed_date_editing_only_updates_targets(self):
         staging = {
+            "review_phase": "confirmation",
+            "conflicts": [],
             "rows": [
                 {
                     "id": "one",
@@ -904,6 +1005,584 @@ class PresentationTests(unittest.TestCase):
             main.selected_date_state([updated["rows"][0]]),
             ("2026-08-01", "已選取 1 個檔案"),
         )
+
+    def test_date_edit_does_not_check_conflicts_before_confirmation(self):
+        staging = {
+            "review_phase": "confirmation",
+            "conflicts": [],
+            "rows": [
+                {
+                    "id": "one",
+                    "filename": "one.xlsx",
+                    "valid": True,
+                    "date": "2026-07-29",
+                    "display_date": "2026/07/29",
+                }
+            ],
+        }
+        with patch("main.refresh_staging_conflicts") as refresh:
+            result = main.update_staged_dates(
+                "2026-08-01", [staging["rows"][0]], staging
+            )
+
+        refresh.assert_not_called()
+        self.assertEqual(result[0]["rows"][0]["date"], "2026-08-01")
+        self.assertEqual(result[2], [])
+        self.assertEqual(result[4], "確認上傳")
+
+    def test_conflicts_compare_same_date_nonblank_values_and_batch_files(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            database_path = Path(temp_dir) / "conflicts.sqlite3"
+            stored = DatabaseTests.holdings({
+                "ISIN": ["F1", "F1"],
+                database.DATE_COLUMN: ["2026-07-29", "2026-07-30"],
+                "標的名稱": ["Fund 1", "Fund 1"],
+                "標的種類": ["基金", "基金"],
+                "類型別": ["A", "A"],
+                "庫存單位數": [1.0, 1.0],
+                database.NAV_COLUMN: [10.0, 99.0],
+                "持有市值(標的幣別)": [10.0, 99.0],
+            })
+            database.store_dataframe(stored, database_path)
+            staging = {
+                "rows": [
+                    {
+                        "id": "one",
+                        "filename": "one.xlsx",
+                        "valid": True,
+                        "date": "2026-07-29",
+                        "instrument_values": [
+                            {
+                                "isin": "F1",
+                                "account": "A002",
+                                database.NAV_COLUMN: 12.0,
+                                database.ISSUE_SIZE_COLUMN: 1_000_000,
+                            },
+                            {
+                                "isin": "F2",
+                                "account": "A002",
+                                database.NAV_COLUMN: None,
+                                database.ISSUE_SIZE_COLUMN: None,
+                            },
+                            {
+                                "isin": "F3",
+                                "account": "A002",
+                                database.NAV_COLUMN: 1.0,
+                                database.ISSUE_SIZE_COLUMN: 3_000,
+                            },
+                        ],
+                    },
+                    {
+                        "id": "two",
+                        "filename": "two.xlsx",
+                        "valid": True,
+                        "date": "2026-07-29",
+                        "instrument_values": [
+                            {
+                                "isin": "F3",
+                                "account": "A003",
+                                database.NAV_COLUMN: 2.0,
+                                database.ISSUE_SIZE_COLUMN: 3_000,
+                            }
+                        ],
+                    },
+                ]
+            }
+
+            conflicts = main.find_upload_conflicts(staging, database_path)
+
+        self.assertEqual(len(conflicts), 3)
+        self.assertEqual(
+            [(item["isin"], item["field"]) for item in conflicts],
+            [
+                ("F1", database.NAV_COLUMN),
+                ("F3", database.NAV_COLUMN),
+                ("F3", database.NAV_COLUMN),
+            ],
+        )
+        f1 = conflicts[0]
+        self.assertEqual(f1["source_id"], "one")
+        self.assertEqual(f1["existing_values"], [10.0])
+        self.assertEqual(f1["existing_accounts"], ["A001"])
+        self.assertNotIn(99.0, f1["existing_values"])
+
+    def test_matching_nav_produces_no_conflict_even_when_issue_size_differs(self):
+        staging = {
+            "rows": [
+                {
+                    "id": "one",
+                    "filename": "one.xlsx",
+                    "valid": True,
+                    "date": "2026-07-29",
+                    "instrument_values": [
+                        {
+                            "isin": "F1",
+                            "account": "A001",
+                            database.NAV_COLUMN: 10.0,
+                            database.ISSUE_SIZE_COLUMN: 1,
+                        }
+                    ],
+                },
+                {
+                    "id": "two",
+                    "filename": "two.xlsx",
+                    "valid": True,
+                    "date": "2026-07-29",
+                    "instrument_values": [
+                        {
+                            "isin": "F1",
+                            "account": "A003",
+                            database.NAV_COLUMN: 10.0,
+                            database.ISSUE_SIZE_COLUMN: 2,
+                        }
+                    ],
+                },
+            ]
+        }
+        with patch("main.load_instrument_observations", return_value=[
+            {
+                "ISIN": "F1",
+                database.DATE_COLUMN: "2026-07-29",
+                database.ACCOUNT_CODE_COLUMN: "A002",
+                database.NAV_COLUMN: 10.0,
+                database.ISSUE_SIZE_COLUMN: 999,
+            }
+        ]):
+            conflicts = main.find_upload_conflicts(staging)
+        self.assertEqual(conflicts, [])
+        self.assertEqual(main.make_conflict_panel(conflicts), [])
+
+    def test_conflict_check_excludes_unselected_batch_files(self):
+        staging = {
+            "rows": [
+                {
+                    "id": "one",
+                    "filename": "one.xlsx",
+                    "valid": True,
+                    "date": "2026-07-29",
+                    "instrument_values": [
+                        {
+                            "isin": "F1",
+                            "account": "A001",
+                            database.NAV_COLUMN: 10.0,
+                        }
+                    ],
+                },
+                {
+                    "id": "two",
+                    "filename": "two.xlsx",
+                    "valid": True,
+                    "date": "2026-07-29",
+                    "instrument_values": [
+                        {
+                            "isin": "F1",
+                            "account": "A002",
+                            database.NAV_COLUMN: 12.0,
+                        }
+                    ],
+                },
+            ]
+        }
+        with patch("main.load_instrument_observations", return_value=[]):
+            selected_only = main.find_upload_conflicts(
+                staging, selected_ids={"one"}
+            )
+            both_selected = main.find_upload_conflicts(
+                staging, selected_ids={"one", "two"}
+            )
+
+        self.assertEqual(selected_only, [])
+        self.assertEqual(
+            {conflict["filename"] for conflict in both_selected},
+            {"one.xlsx", "two.xlsx"},
+        )
+
+    def test_selection_change_clears_review_and_disables_empty_upload(self):
+        staging = {
+            "rows": [
+                {"id": "one", "valid": True},
+                {"id": "two", "valid": True},
+            ],
+            "selected_ids": ["one"],
+            "reviewed_selection": ["one"],
+            "review_phase": "conflict_review",
+            "conflicts": [{"id": "conflict"}],
+        }
+
+        result = main.update_staged_selection([], staging)
+
+        self.assertEqual(result[2]["selected_ids"], [])
+        self.assertEqual(result[2]["review_phase"], "confirmation")
+        self.assertEqual(result[2]["conflicts"], [])
+        self.assertEqual(result[5], "確認上傳")
+        self.assertTrue(result[6])
+
+    def test_conflict_panel_and_summary_expose_decision_details(self):
+        conflict = {
+            "id": "one:0:nav",
+            "filename": "one.xlsx",
+            "isin": "F1",
+            "date": "2026-07-29",
+            "field": database.NAV_COLUMN,
+            "incoming_value": 12.0,
+            "existing_values": [10.0],
+            "existing_accounts": ["A001"],
+            "sources": ["database"],
+        }
+        staging = {"rows": [{"valid": True}], "conflicts": [conflict]}
+
+        panel_text = " ".join(text_content(main.make_conflict_panel([conflict])))
+
+        self.assertIn("偵測到資料不一致", panel_text)
+        self.assertIn("基金淨值", panel_text)
+        self.assertIn("F1", panel_text)
+        self.assertIn("12", panel_text)
+        self.assertIn("A001", panel_text)
+        self.assertEqual(
+            main.upload_staging_summary(staging),
+            "已選取 1 個有效檔案 · 1 個 ISIN 有資料差異",
+        )
+
+    def test_first_confirmation_opens_conflict_review_before_upload(self):
+        selected = {"id": "one", "valid": True}
+        staging = {
+            "rows": [selected],
+            "conflicts": [],
+            "selected_ids": ["one"],
+            "review_phase": "confirmation",
+        }
+        refreshed = {
+            **staging,
+            "review_phase": "conflict_review",
+            "conflicts": [
+                {
+                    "id": "one:0:nav",
+                    "source_id": "one",
+                    "filename": "one.xlsx",
+                    "isin": "F1",
+                    "date": "2026-07-29",
+                    "field": database.NAV_COLUMN,
+                    "incoming_value": 12.0,
+                    "existing_values": [10.0],
+                    "existing_accounts": ["A001"],
+                    "sources": ["database"],
+                }
+            ],
+        }
+        with (
+            patch("main.ctx", MagicMock(triggered_id="upload-confirm-button")),
+            patch("main.refresh_staging_conflicts", return_value=refreshed),
+            patch("main.process_staged_workbooks") as process,
+        ):
+            result = main.finish_upload(0, 1, staging, [selected])
+
+        process.assert_not_called()
+        self.assertEqual(result[0], "upload-modal upload-modal--open")
+        self.assertEqual(result[1]["reviewed_selection"], ["one"])
+        self.assertEqual(result[1]["conflicts"], refreshed["conflicts"])
+        self.assertEqual(result[8], "")
+        self.assertEqual(result[10], "仍要上傳")
+
+    def test_first_confirmation_uploads_clean_files_and_reviews_only_conflicts(
+        self,
+    ):
+        clean = {"id": "clean", "filename": "clean.xlsx", "valid": True}
+        failed = {"id": "failed", "filename": "failed.xlsx", "valid": True}
+        conflicted = {
+            "id": "conflicted",
+            "filename": "conflicted.xlsx",
+            "valid": True,
+        }
+        staging = {
+            "rows": [clean, failed, conflicted],
+            "conflicts": [],
+            "selected_ids": ["clean", "failed", "conflicted"],
+            "review_phase": "confirmation",
+            "upload_results": [],
+        }
+        conflict = {
+            "id": "conflicted:0:nav",
+            "source_id": "conflicted",
+            "filename": "conflicted.xlsx",
+            "isin": "F1",
+            "date": "2026-07-29",
+            "field": database.NAV_COLUMN,
+            "incoming_value": 12.0,
+            "existing_values": [10.0],
+            "existing_accounts": ["A001"],
+            "sources": ["database"],
+        }
+        refreshed = {**staging, "conflicts": [conflict]}
+        clean_result = {
+            "id": "clean",
+            "filename": "clean.xlsx",
+            "status": "完成",
+            "detail": "done",
+            "imported_rows": 1,
+        }
+        failed_result = {
+            "id": "failed",
+            "filename": "failed.xlsx",
+            "status": "失敗",
+            "detail": "write failed",
+            "imported_rows": 0,
+        }
+        with (
+            patch("main.ctx", MagicMock(triggered_id="upload-confirm-button")),
+            patch("main.refresh_staging_conflicts", return_value=refreshed),
+            patch(
+                "main.process_staged_workbooks",
+                return_value=[clean_result, failed_result],
+            ) as process,
+        ):
+            result = main.finish_upload(
+                0, 1, staging, [clean, failed, conflicted]
+            )
+
+        process.assert_called_once_with(refreshed, {"clean", "failed"})
+        self.assertEqual(result[0], "upload-modal upload-modal--open")
+        self.assertEqual(
+            [row["id"] for row in result[1]["rows"]], ["conflicted"]
+        )
+        self.assertEqual(result[1]["selected_ids"], ["conflicted"])
+        self.assertEqual(result[1]["reviewed_selection"], ["conflicted"])
+        self.assertEqual([row["id"] for row in result[3]], ["conflicted"])
+        self.assertEqual(result[1]["conflicts"], [conflict])
+        self.assertIn("1 個完成 · 1 個失敗", " ".join(text_content(result[6])))
+        self.assertEqual(
+            result[11],
+            "已處理 2 個檔案 · 已選取 1 個有效檔案 · "
+            "1 個 ISIN 有資料差異",
+        )
+        self.assertEqual(result[10], "仍要上傳")
+
+    def test_first_confirmation_uploads_immediately_without_conflicts(self):
+        staging = {
+            "rows": [{"id": "one", "valid": True}],
+            "conflicts": [],
+            "review_phase": "confirmation",
+            "selected_ids": ["one"],
+            "upload_results": [],
+        }
+        completed = {
+            "id": "one",
+            "filename": "one.xlsx",
+            "status": "完成",
+            "detail": "done",
+            "imported_rows": 1,
+        }
+        with (
+            patch("main.ctx", MagicMock(triggered_id="upload-confirm-button")),
+            patch(
+                "main.refresh_staging_conflicts",
+                return_value={**staging, "conflicts": []},
+            ),
+            patch(
+                "main.process_staged_workbooks",
+                return_value=[completed],
+            ) as process,
+        ):
+            result = main.finish_upload(0, 1, staging, [staging["rows"][0]])
+
+        self.assertEqual(process.call_count, 1)
+        self.assertEqual(process.call_args.args[1], {"one"})
+        self.assertEqual(result[0], "upload-modal")
+        self.assertIn("1 個完成", " ".join(text_content(result[6])))
+
+    def test_second_confirmation_uploads_after_unchanged_conflict_review(self):
+        conflict = {
+            "id": "old",
+            "filename": "one.xlsx",
+            "isin": "F1",
+            "date": "2026-07-29",
+            "field": database.NAV_COLUMN,
+            "incoming_value": 12.0,
+            "existing_values": [10.0],
+            "existing_accounts": ["A001"],
+            "sources": ["database"],
+        }
+        staging = {
+            "rows": [{"id": "one", "valid": True}],
+            "review_phase": "conflict_review",
+            "conflicts": [conflict],
+            "selected_ids": ["one"],
+            "reviewed_selection": ["one"],
+            "upload_results": [],
+        }
+        completed = {
+            "id": "one",
+            "filename": "one.xlsx",
+            "status": "完成",
+            "detail": "done",
+            "imported_rows": 1,
+        }
+        with (
+            patch("main.ctx", MagicMock(triggered_id="upload-confirm-button")),
+            patch("main.refresh_staging_conflicts", return_value=staging),
+            patch(
+                "main.process_staged_workbooks",
+                return_value=[completed],
+            ) as process,
+        ):
+            result = main.finish_upload(0, 2, staging, [staging["rows"][0]])
+
+        process.assert_called_once()
+        self.assertEqual(result[0], "upload-modal")
+        self.assertIn("1 個完成", " ".join(text_content(result[6])))
+
+    def test_conflict_review_reopens_when_database_conflicts_change(self):
+        existing_conflict = {
+            "id": "old",
+            "filename": "one.xlsx",
+            "isin": "F1",
+            "date": "2026-07-29",
+            "field": database.NAV_COLUMN,
+            "incoming_value": 12.0,
+            "existing_values": [10.0],
+            "existing_accounts": ["A001"],
+            "sources": ["database"],
+        }
+        staging = {
+            "rows": [{"id": "one", "valid": True}],
+            "review_phase": "conflict_review",
+            "conflicts": [existing_conflict],
+            "selected_ids": ["one"],
+            "reviewed_selection": ["one"],
+        }
+        refreshed = {
+            **staging,
+            "conflicts": [{**existing_conflict, "existing_values": [11.0]}],
+        }
+        with (
+            patch("main.ctx", MagicMock(triggered_id="upload-confirm-button")),
+            patch("main.refresh_staging_conflicts", return_value=refreshed),
+            patch("main.process_staged_workbooks") as process,
+        ):
+            result = main.finish_upload(0, 2, staging, [staging["rows"][0]])
+
+        process.assert_not_called()
+        self.assertIn("衝突清單已更新", result[8])
+        self.assertEqual(result[10], "仍要上傳")
+
+    def test_partial_upload_keeps_unselected_files_and_cumulative_results(self):
+        first = {"id": "one", "filename": "one.xlsx", "valid": True}
+        second = {"id": "two", "filename": "two.xlsx", "valid": True}
+        staging = {
+            "rows": [first, second],
+            "selected_ids": ["one"],
+            "review_phase": "confirmation",
+            "conflicts": [],
+            "upload_results": [],
+        }
+        first_result = {
+            "id": "one",
+            "filename": "one.xlsx",
+            "status": "完成",
+            "detail": "first done",
+            "imported_rows": 1,
+        }
+        second_result = {
+            "id": "two",
+            "filename": "two.xlsx",
+            "status": "完成",
+            "detail": "second done",
+            "imported_rows": 2,
+        }
+        with (
+            patch("main.ctx", MagicMock(triggered_id="upload-confirm-button")),
+            patch(
+                "main.refresh_staging_conflicts",
+                side_effect=lambda current, **_: current,
+            ),
+            patch(
+                "main.process_staged_workbooks",
+                side_effect=[[first_result], [second_result]],
+            ),
+        ):
+            partial = main.finish_upload(0, 1, staging, [first])
+            partial_row_ids = [
+                row["id"] for row in partial[1]["rows"]
+            ]
+            second_staging = {
+                **partial[1],
+                "rows": list(partial[1]["rows"]),
+                "upload_results": list(partial[1]["upload_results"]),
+            }
+            completed = main.finish_upload(
+                0, 2, second_staging, [partial[2][0]]
+            )
+
+        self.assertEqual(partial[0], "upload-modal upload-modal--open")
+        self.assertEqual(partial_row_ids, ["two"])
+        self.assertEqual(partial[3], [])
+        self.assertIn("1 個完成", " ".join(text_content(partial[6])))
+        self.assertEqual(completed[0], "upload-modal")
+        completed_text = " ".join(text_content(completed[6]))
+        self.assertIn("已處理 2 個報表檔案", completed_text)
+        self.assertIn("本批次共寫入 3 筆資料", completed_text)
+
+    def test_failed_selected_file_remains_selected_for_retry(self):
+        selected = {"id": "one", "filename": "one.xlsx", "valid": True}
+        staging = {
+            "rows": [selected],
+            "selected_ids": ["one"],
+            "review_phase": "confirmation",
+            "conflicts": [],
+            "upload_results": [],
+        }
+        failed = {
+            "id": "one",
+            "filename": "one.xlsx",
+            "status": "失敗",
+            "detail": "parse failed",
+            "imported_rows": 0,
+        }
+        with (
+            patch("main.ctx", MagicMock(triggered_id="upload-confirm-button")),
+            patch(
+                "main.refresh_staging_conflicts",
+                side_effect=lambda current, **_: current,
+            ),
+            patch("main.process_staged_workbooks", return_value=[failed]),
+        ):
+            result = main.finish_upload(0, 1, staging, [selected])
+
+        self.assertEqual(result[0], "upload-modal upload-modal--open")
+        self.assertEqual(result[1]["selected_ids"], ["one"])
+        self.assertEqual([row["id"] for row in result[3]], ["one"])
+        self.assertIn("1 個失敗", " ".join(text_content(result[6])))
+
+    def test_invalid_rows_do_not_prevent_close_after_valid_uploads(self):
+        selected = {"id": "one", "filename": "one.xlsx", "valid": True}
+        invalid = {"id": "bad", "filename": "bad.xlsx", "valid": False}
+        staging = {
+            "rows": [selected, invalid],
+            "selected_ids": ["one"],
+            "review_phase": "confirmation",
+            "conflicts": [],
+            "upload_results": [],
+        }
+        completed = {
+            "id": "one",
+            "filename": "one.xlsx",
+            "status": "完成",
+            "detail": "done",
+            "imported_rows": 1,
+        }
+        with (
+            patch("main.ctx", MagicMock(triggered_id="upload-confirm-button")),
+            patch(
+                "main.refresh_staging_conflicts",
+                side_effect=lambda current, **_: current,
+            ),
+            patch(
+                "main.process_staged_workbooks", return_value=[completed]
+            ),
+        ):
+            result = main.finish_upload(0, 1, staging, [selected])
+
+        self.assertEqual(result[0], "upload-modal")
+        self.assertEqual(result[1], {"rows": []})
 
     def test_confirmation_overrides_dates_and_isolates_failures(self):
         staging = {
@@ -961,6 +1640,62 @@ class PresentationTests(unittest.TestCase):
         )
         self.assertIn("1 個完成 · 2 個失敗", " ".join(text_content(result)))
 
+    def test_processing_uploads_only_selected_valid_files(self):
+        staging = {
+            "rows": [
+                {
+                    "id": "one",
+                    "filename": "one.xlsx",
+                    "valid": True,
+                    "date": "2026-07-29",
+                    "source_kind": "upload",
+                    "source_contents": "one",
+                },
+                {
+                    "id": "two",
+                    "filename": "two.xlsx",
+                    "valid": True,
+                    "date": "2026-07-30",
+                    "source_kind": "upload",
+                    "source_contents": "two",
+                },
+            ]
+        }
+        frame = pl.DataFrame(
+            {database.DATE_COLUMN: ["2025-01-01"], "ISIN": ["F1"]}
+        )
+        with (
+            patch(
+                "main.parse_excel_result",
+                return_value=reader.ParsedWorkbook(frame, "ctbc"),
+            ) as parse,
+            patch("main.store_dataframe") as store,
+        ):
+            results = main.process_staged_workbooks(staging, {"two"})
+
+        parse.assert_called_once_with("two")
+        store.assert_called_once()
+        self.assertEqual([row["id"] for row in results], ["two"])
+
+    def test_retry_result_replaces_previous_file_result(self):
+        failed = {
+            "id": "one",
+            "filename": "one.xlsx",
+            "status": "失敗",
+            "detail": "failed",
+            "imported_rows": 0,
+        }
+        completed = {
+            **failed,
+            "status": "完成",
+            "detail": "done",
+            "imported_rows": 5,
+        }
+
+        merged = main.merge_upload_results([failed], [completed])
+
+        self.assertEqual(merged, [completed])
+
     def test_cancel_clears_staging_without_database_writes(self):
         with (
             patch("main.ctx", MagicMock(triggered_id="upload-cancel-button")),
@@ -973,6 +1708,52 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(result[0], "upload-modal")
         self.assertEqual(result[1], {"rows": []})
         self.assertIsNone(result[4])
+
+    def test_cancel_conflict_review_preserves_processed_upload_status(self):
+        staging = {
+            "rows": [{"id": "conflicted", "valid": True}],
+            "review_phase": "conflict_review",
+            "upload_results": [
+                {
+                    "id": "clean",
+                    "filename": "clean.xlsx",
+                    "status": "完成",
+                    "detail": "done",
+                    "imported_rows": 1,
+                }
+            ],
+        }
+        with patch(
+            "main.ctx", MagicMock(triggered_id="upload-cancel-button")
+        ):
+            result = main.finish_upload(1, 0, staging)
+
+        self.assertEqual(result[0], "upload-modal")
+        self.assertEqual(result[1], {"rows": []})
+        self.assertEqual(result[2], [])
+        self.assertEqual(result[3], [])
+        self.assertIsNone(result[4])
+        self.assertIsNone(result[5])
+        self.assertIs(result[6], main.no_update)
+        self.assertIs(result[7], main.no_update)
+        self.assertEqual(result[8], "")
+        self.assertEqual(result[9], [])
+        self.assertEqual(result[10], "確認上傳")
+        self.assertEqual(result[11], "")
+
+    def test_cancel_conflict_review_without_results_clears_upload_status(self):
+        staging = {
+            "rows": [{"id": "conflicted", "valid": True}],
+            "review_phase": "conflict_review",
+            "upload_results": [],
+        }
+        with patch(
+            "main.ctx", MagicMock(triggered_id="upload-cancel-button")
+        ):
+            result = main.finish_upload(1, 0, staging)
+
+        self.assertEqual(result[6], "")
+        self.assertEqual(result[7], "batch-status")
 
 
 
